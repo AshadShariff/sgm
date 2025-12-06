@@ -8,8 +8,20 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-unbounded: var(--font-unbounded);
+  --font-satoshi: var(--font-satoshi);
+  
+  /* Brand Colors - Warm Orange/Brown/Gold Theme */
+  --color-brand-400: #D97706;
+  --color-brand-500: #B45309;
+  --color-brand-600: #92400E;
+  --color-accent-gold: #F59E0B;
+  --color-gold-light: #FCD34D;
+  --color-orange-warm: #EA580C;
+  --color-brown-warm: #A16207;
+  --color-bg-dark: #0F172A;
+  --color-bg-warm: #F5E6D3;
+  --color-bg-tan: #E8D5B7;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +34,15 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-satoshi), system-ui, sans-serif;
+}
+
+/* Main Headings - Unbounded */
+h1, h2, h3 {
+  font-family: var(--font-unbounded), system-ui, sans-serif;
+}
+
+/* Small headings and body text - Satoshi */
+h4, h5, h6, p, span, div, button, a, li, label, input, textarea, select {
+  font-family: var(--font-satoshi), system-ui, sans-serif;
 }
