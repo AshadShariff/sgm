@@ -77,7 +77,7 @@ export default function HomePage() {
           <motion.p
             // ✨ FINAL SIZE: text-lg (matches first line size)
             // ✨ FINAL COLOR: Dark brown #794D23
-            className={`text-3xl md:text-4xl font-semibold text-white  mb-2`}
+            className={`text-md md:text-xl font-semibold text-white  mb-2`}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: prefersReducedMotion ? 0 : 0.2 }}
@@ -88,7 +88,7 @@ export default function HomePage() {
           {/* Headline (Create Your AI Clone In Just 30 mins) */}
           <motion.h1
            
-            className={`text-4xl md:text-5xl text-white mb-8 leading-tight`}
+            className={`text-md md:text-4xl text-white mb-8 leading-none`}
             // style={{ textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -96,7 +96,7 @@ export default function HomePage() {
           >
             Create Your AI Clone 
             <br />
-            <span  className={`text-4xl md:text-5xl font-extrabold text-black mb-8 leading-2`}>
+            <span  className={`text-xl md:text-4xl font-bold text-black mb-8 leading-normal `}>
             In Just 30 mins
             </span>
           </motion.h1>
@@ -134,14 +134,14 @@ export default function HomePage() {
           <motion.p
             // ✨ FINAL SIZE: text-lg/xl (condensed and bold)
             // ✨ FINAL COLOR: Dark brown #794D23
-            className={`text-3xl md:text-3xl font-bold text-white mt-10 mb-20`}
+            className={`text-2xl md:text-2xl font-bold text-white mt-10 mb-20 `}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: prefersReducedMotion ? 0 : 0.8 }}
           >
-            Real Estate Agents Are Using AI To Get
+            Real Estate Agents Are<br/> Using AI To Get
             <br />
-            <span   className={`text-2xl pt-9 relative bottom-0.5 md:text-2xl font-bold text-black mt-12 mb-6`}>
+            <span   className={`text-2xl pt-9 relative bottom-0.5 md:text-2xl font-medium text-black mt-12 mb-6`}>
 
             3x More Luxury Listings
             </span>

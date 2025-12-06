@@ -300,7 +300,7 @@ function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.7 }}
-              className="text-lg text-gray-400 mb-8 leading-relaxed text-balance"
+              className="text-xs text-gray-400 mb-8 leading-relaxed text-balance"
             >
               No camera. No editing. No tech skills.
             </motion.p>

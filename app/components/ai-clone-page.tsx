@@ -220,13 +220,13 @@ export default function AiClonePage() {
 
         {/* HEADINGS */}
         <div className="text-center max-w-4xl mx-auto px-6">
-          <p className="text-white/95 text-[24px] mb-4 font-bold">No camera. No editing. No tech skills.</p>
+          <p className="text-white/95 text-lg mb-4 font-bold">No camera. No editing. No tech skills.</p>
 
-          <h1 className="text-white font-extrabold text-[35px] md:text-[50px] leading-[0.9] drop-shadow-xl">
+          <h1 className="text-white text-2xl md:text-3xl  drop-shadow-xl leading-3">
             Create Your AI Clone
           </h1>
 
-          <p className="text-[#0b0b0b] text-[40px] md:text-[45px] font-semibold mt-3 mb-10">
+          <p className="text-[#0b0b0b] text-md md:text-3xl font-semibold mt-3 mb-10 leading-none">
             In Just 30 mins
           </p>
         </div>
@@ -267,15 +267,15 @@ export default function AiClonePage() {
         {/* Real Estate Section */}
         <div className="mt-12 text-center max-w-4xl mx-auto px-6">
           <motion.h2
-            className="text-white font-bold text-[32px] md:text-[35px] lg:text-[30px] leading-tight mb-8 drop-shadow-lg"
+            className="text-white  text-md md:text-md lg:text-lg leading-tight mb-8 drop-shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            Real Estate Agents Are Using AI To Get
+            Real Estate Agents Are<br/> Using AI To Get
             <br />
-            <span className="text-[36px] md:text-[56px] lg:text-[30px]">3x More Luxury Listings</span>
+            <span className="text-md md:text-2xl lg:text-3xl text-black font-medium">3x More Luxury Listings</span>
           </motion.h2>
 
           <motion.button
@@ -306,48 +306,61 @@ export default function AiClonePage() {
 
       <section className="w-full py-20 bg-black flex flex-col items-center">
         {/* Title */}
-        <h2 className="text-4xl md:text-4xl font-semibold text-white mb-14">
-          Our AI <span className="text-[#D7A059]">Clones</span>
+        <h2 className="text-2xl md:text-2xl  text-white mb-14">
+          Our AI <span className="text-[#D7A059] font-medium">Clones</span>
         </h2>
 
-        {/* Image Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-6 md:px-0">
-          {/* Card 1 */}
-          <div className="w-[260px] h-[380px] bg-[#111] rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://images.unsplash.com/photo-1689636430443-f9e8fb1ae5c4?auto=format&fit=crop&w=500&q=80"
-              className="w-full h-full object-cover"
-              alt="Unsplash sample 1"
-            />
-          </div>
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-6 md:px-0">
+  {/* Card 1 */}
+  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
+    <video
+      src="/video.mp4"
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="w-full h-full object-cover"
+    />
+  </div>
 
-          {/* Card 2 */}
-          <div className="w-[260px] h-[380px] bg-[#111] rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://images.unsplash.com/photo-1688349927079-7c5403e028cd?auto=format&fit=crop&w=500&q=80"
-              className="w-full h-full object-cover"
-              alt="Unsplash sample 2"
-            />
-          </div>
+  {/* Card 2 */}
+  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
+    <video
+      src="/video.mp4"
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="w-full h-full object-cover"
+    />
+  </div>
 
-          {/* Card 3 */}
-          <div className="w-[260px] h-[380px] bg-[#111] rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://images.unsplash.com/photo-1687869483463-0bbf335b4398?auto=format&fit=crop&w=500&q=80"
-              className="w-full h-full object-cover"
-              alt="Unsplash sample 3"
-            />
-          </div>
+  {/* Card 3 */}
+  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
+    <video
+      src="/video.mp4"
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="w-full h-full object-cover"
+    />
+  </div>
 
-          {/* Card 4 */}
-          <div className="w-[260px] h-[380px] bg-[#111] rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://images.unsplash.com/photo-1688024549809-c2b1ad13b681?auto=format&fit=crop&w=500&q=80"
-              className="w-full h-full object-cover"
-              alt="Unsplash sample 4"
-            />
-          </div>
-        </div>
+  {/* Card 4 */}
+  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
+    <video
+      src="/video.mp4"
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="w-full h-full object-cover"
+    />
+  </div>
+</div>
+
+        
       </section>
 
       {/* Compare Options Section (adjusted widths/heights & subtler accents) */}
@@ -360,187 +373,175 @@ export default function AiClonePage() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Compare Your <span className="text-[#C89356]">Options</span>
+            <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-4">
+              Compare Your <span className="text-[#C89356] font-semibold">Options</span>
             </h2>
             <p className="text-xl text-gray-700">See why 500+ agents choose the smart way.</p>
           </motion.div>
+<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto max-w-[1280px] items-start">
+  {/* CARD TEMPLATE WRAPPER APPLIED CONSISTENTLY */}
+  {[
+    {
+      title: "OLD WAY",
+      price: "$500",
+      tag: "Expensive",
+      icon: XIcon,
+      colorText: "text-gray-900",
+      list: ["Wait for scheduling", "Travel to location", "Expensive equipment", "Revision fees"],
+      footer: <>50 videos = <span className="text-[#C89356] font-semibold">$25,000</span></>,
+      highlight: false,
+    },
+    {
+      title: "DIY WAY",
+      price: "$3K+",
+      tag: "Time Sink",
+      icon: AlertTriangle,
+      colorText: "text-gray-900",
+      list: ["100+ hours learning", "Software subscriptions", "Online courses", "Months to learn", "Still looks amateur"],
+      footer: <>Time = Money Lost</>,
+      highlight: false,
+    },
+    {
+      title: "SMART WAY",
+      price: "$37",
+      tag: "Best Value",
+      icon: Check,
+      colorText: "text-white",
+      list: [
+        "No Subscription Fees",
+        "Get your AI Avatar Clone (With Voice, Facial Expression & Body Language Cloning)",
+        "No skills needed",
+        "Get one free video of your AI Avatar with your script/prompt & post it on any Social Media Channel",
+      ],
+      footer: <>You save: <span className="font-semibold">$24,963!</span></>,
+      highlight: true,
+    },
+  ].map((card, idx) => (
+    <motion.div
+      key={idx}
+      className={`relative rounded-2xl  ${
+        card.highlight
+          ? "border-2 border-green-600 bg-gradient-to-b from-emerald-500 to-emerald-600 text-white"
+          : "border border-gray-200 bg-white text-gray-900"
+      }  grid grid-rows-[auto,1fr,auto] min-h-[520px]`}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: idx * 0.07 }}
+      viewport={{ once: true }}
+    >{/* BADGE EXACT PLACEMENT */}
+      <div
+        className={`absolute -top-4 left-1/2 z-10 -translate-x-1/2 ${
+          card.highlight ? "bg-[#FCD34D] text-gray-900" : "bg-[#C89356] text-white"
+        } px-4 py-1 rounded-full text-sm font-semibold`}
+      >
+        {card.tag}
+      </div>
+      <div className="relative h-full w-full rounded-2xl overflow-hidden p-8">
+        
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            {/* Old Way */}
-            <motion.div
-              className="relative flex-1 rounded-2xl border border-gray-200 bg-white p-8 flex flex-col min-h-[520px]"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              {/* small gold badge centered top */}
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="bg-[#C89356] text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Expensive
-                </span>
-              </div>
+     {/* GOLD CORNER, non-highlight only */}
+{!card.highlight && (
+  <div
+    aria-hidden
+    className="absolute -top-4 -right-4 w-[180px] h-[160px] rounded-full opacity-70
+               bg-gradient-to-bl from-[#F5D8B0] via-[#F3D5AD] to-transparent blur-xl pointer-events-none"
+  />
+)}
 
-              {/* small subtle gold corner (non-blurry) */}
-              <div
-                aria-hidden
-                className="absolute -top-2 right-6 w-28 h-12 rounded-xl bg-gradient-to-br from-[#F5D8B0] to-transparent opacity-70"
-              />
 
-              <div className="text-center mb-6 mt-6">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <XIcon size={24} className="text-gray-700" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 tracking-wide">OLD WAY</h3>
-                </div>
-                <p className="text-gray-600 mb-4 text-lg font-medium italic">Hire Videographer</p>
-
-                <div className="bg-gray-100 rounded-xl py-5 mb-6 mx-10">
-                  <div className="text-4xl md:text-5xl font-bold text-gray-900">$500</div>
-                </div>
-              </div>
-
-              <ul className="space-y-3 mt-2 flex-grow">
-                {["Wait for scheduling", "Travel to location", "Expensive equipment", "Revision fees"].map(
-                  (item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-gray-700">
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <XIcon size={12} className="text-gray-700" />
-                      </div>
-                      <span className="text-sm">{item}</span>
-                    </li>
-                  )
-                )}
-              </ul>
-
-              <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
-                50 videos = <span className="text-[#C89356] font-semibold">$25,000</span>
-              </div>
-            </motion.div>
-
-            {/* DIY Way */}
-            <motion.div
-              className="relative flex-1 rounded-2xl border border-gray-200 bg-white p-8 flex flex-col min-h-[520px]"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.06 }}
-              viewport={{ once: true }}
-            >
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="bg-[#C89356] text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Time Sink
-                </span>
-              </div>
-
-              <div
-                aria-hidden
-                className="absolute -top-2 right-6 w-28 h-12 rounded-xl bg-gradient-to-br from-[#F5D8B0] to-transparent opacity-70"
-              />
-
-              <div className="text-center mb-6 mt-6">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <AlertTriangle size={24} className="text-gray-700" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 tracking-wide">DIY WAY</h3>
-                </div>
-                <p className="text-gray-600 mb-4 text-lg font-medium italic">Learn Video Editing</p>
-
-                <div className="bg-gray-100 rounded-xl py-5 mb-6 mx-10">
-                  <div className="text-4xl md:text-5xl font-bold text-gray-900">$3K+</div>
-                </div>
-              </div>
-
-              <ul className="space-y-3 mt-2 flex-grow">
-                {[
-                  "100+ hours learning",
-                  "Software subscriptions",
-                  "Online courses",
-                  "Months to learn",
-                  "Still looks amateur",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700">
-                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <XIcon size={12} className="text-gray-700" />
-                    </div>
-                    <span className="text-sm">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
-                Time = Money Lost
-              </div>
-            </motion.div>
-
-            {/* Smart Way (toned down gradient; equal width) */}
-            <motion.div
-              className="relative flex-1 rounded-2xl border-2 border-green-600 p-8 flex flex-col min-h-[520px] bg-gradient-to-b from-emerald-500 to-emerald-600"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.12 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -6 }}
-            >
-              <div className="absolute -top-3 right-8">
-                <span className="bg-[#FCD34D] text-gray-900 px-4 py-1 rounded-full text-sm font-semibold">
-                  Best Value
-                </span>
-              </div>
-
-              {/* subtle circular icon */}
-              <div className="text-center mb-6 mt-6">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                    <Check size={24} className="text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white tracking-wide">SMART WAY</h3>
-                </div>
-                <p className="text-white/90 mb-4 text-lg font-medium italic">AgentClone AI</p>
-
-                <div className="bg-emerald-600 rounded-xl py-5 mb-6 mx-10 shadow-inner">
-                  <div className="text-4xl md:text-5xl font-bold text-white">$37</div>
-                </div>
-              </div>
-
-              <ul className="space-y-3 mt-2 flex-grow text-white">
-                {[
-                  "No Subscription Fees",
-                  "Get your AI Avatar Clone (With Voice, Facial Expression & Body Language Cloning)",
-                  "No skills needed",
-                  "Get one free video of your AI Avatar with your script/prompt & post it on any Social Media Channel",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <Check size={12} className="text-white" />
-                    </div>
-                    <span className="text-sm">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 pt-6 border-t border-emerald-500 text-center text-sm text-white/90">
-                <div className="mb-3">You save: <span className="font-semibold">$24,963!</span></div>
-                <button
-                  className="w-full py-4 rounded-full text-black font-semibold text-lg flex items-center justify-center gap-3 shadow-lg"
-                  style={{
-                    background: "linear-gradient(90deg,#f7c361 0%, #f1a23a 50%, #e28f2c 100%)",
-                    boxShadow: "0 10px 24px rgba(0,0,0,0.12), inset 0 6px 18px rgba(255,255,255,0.08)",
-                    paddingLeft: "2.25rem",
-                    paddingRight: "2.25rem",
-                  }}
-                >
-                  <span>Get Your AI Clone At $37</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12h14M13 5l6 7-6 7" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-
-              </div>
-            </motion.div>
+      {/* HEADER */}
+      <div className="text-center mt-6 mb-6 flex flex-col items-center">
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <div
+            className={`w-12 h-12 rounded-full ${
+              card.highlight ? "bg-white/20" : "bg-gray-100"
+            } flex items-center justify-center`}
+          >
+            <card.icon size={24} className={card.highlight ? "text-white" : "text-gray-700"} />
           </div>
+          <h3 className={`text-xl font-semibold tracking-wide ${card.colorText}`}>{card.title}</h3>
+        </div>
+
+        <p
+          className={`text-lg font-medium italic ${
+            card.highlight ? "text-white/90" : "text-gray-600"
+          }`}
+        >
+          {idx === 0 ? "Hire Videographer" : idx === 1 ? "Learn Video Editing" : "AgentClone AI"}
+        </p>
+
+        {/* PRICING BOX EXACT DIMENSIONS */}
+        <div
+          className={`rounded-xl py-5 mb-6 w-[230px] shadow-inner ${
+            card.highlight ? "bg-emerald-600" : "bg-gray-100"
+          }`}
+        >
+          <div className={`text-4xl md:text-5xl font-bold ${card.colorText}`}>{card.price}</div>
+        </div>
+      </div>
+
+      {/* FEATURES */}
+      <ul
+        className={`space-y-3 text-sm leading-relaxed ${
+          card.highlight ? "text-white" : "text-gray-700"
+        } mx-auto w-[230px]`}
+      >
+        {card.list.map((txt, i) => (
+          <li key={i} className="flex gap-3">
+            <div
+              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                card.highlight ? "bg-white/20" : "bg-gray-200"
+              }`}
+            >
+              {card.highlight ? (
+                <Check size={12} className="text-white" />
+              ) : (
+                <XIcon size={12} className="text-gray-700" />
+              )}
+            </div>
+            {txt}
+          </li>
+        ))}
+      </ul>
+
+      {/* FOOTER */}
+      <div
+        className={`pt-6 mt-8 border-t text-center text-sm ${
+          card.highlight ? "border-emerald-500 text-white/90" : "border-gray-200 text-gray-600"
+        }`}
+      >
+        {card.footer}
+
+        {/* CTA ONLY ON LAST CARD EXACT MATCH */}
+        {card.highlight && (
+          <button
+            className="mt-6 w-full py-4 rounded-full text-black font-semibold text-lg flex items-center justify-center gap-3 shadow-lg"
+            style={{
+              background:
+                "linear-gradient(90deg,#f7c361 0%, #f1a23a 50%, #e28f2c 100%)",
+              boxShadow:
+                "0 10px 24px rgba(0,0,0,0.12), inset 0 6px 18px rgba(255,255,255,0.08)",
+            }}
+          >
+            <span>Get Your AI Clone At $37</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+              <path
+                d="M5 12h14M13 5l6 7-6 7"
+                stroke="#111827"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+      </div>
+    </motion.div>
+  ))}
+</div>
+
+          
         </div>
       </section>
 
