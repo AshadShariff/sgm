@@ -26,7 +26,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Only set to translucent/shadowed when scrolled, otherwise solid HEADER_COLOR
+      // Set to solid color when scrolled
       setIsScrolled(window.scrollY > 50)
     }
     window.addEventListener("scroll", handleScroll)
@@ -35,12 +35,11 @@ export default function Header() {
 
   return (
     <motion.header
-      // Set header background to the solid caramel color.
-      // ✨ MODIFIED: Removed 'shadow-[0_8px_30px_rgba(0,0,0,0.25)]' and 'backdrop-blur-sm'
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 overflow-visible ${isScrolled
-        ? `bg-[${HEADER_COLOR}]/95` // Translucent color only
-        : `bg-[${HEADER_COLOR}]` // Solid color when at the top
-        }`}
+      // Set header background to the solid caramel color, always solid
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 overflow-visible"
+      style={{
+        backgroundColor: HEADER_COLOR,
+      }}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
@@ -64,15 +63,15 @@ export default function Header() {
             className={`hidden md:inline-flex items-center justify-center ml-auto px-12 py-2 bg-white text-[#111] rounded-full font-semibold shadow-lg transition-all duration-300 hover:text-[${TEXT_HOVER_COLOR}] hover:scale-105` }
             whileHover={{
               scale: 1.05,
-              // White glowing shadow on hover
+              // Enhanced white glowing shadow on hover
               boxShadow:
-                "0 0 40px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4), 0 8px 30px rgba(0,0,0,0.1)",
+                "0 0 50px rgba(255,255,255,1), 0 0 100px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4), 0 8px 30px rgba(0,0,0,0.1)",
             }}
             whileTap={{ scale: 0.98 }}
             style={{
-              // Base shadow when not hovered
+              // Enhanced base white glowing shadow when not hovered
               boxShadow:
-                "0 18px 60px rgba(0,0,0,0.35), 0 0 36px rgba(255,255,255,0.08), 0 8px 30px rgba(180,83,9,0.08)",
+                "0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(255,255,255,0.4), 0 18px 60px rgba(0,0,0,0.35), 0 8px 30px rgba(180,83,9,0.08)",
             }}
           >
             Get Your AI Clone
@@ -130,7 +129,7 @@ export default function Header() {
                 className={`w-full px-4 py-3 bg-white text-[#111] rounded-full font-semibold shadow-lg text-center block transition-colors hover:text-[${TEXT_HOVER_COLOR}]`}
                 style={{
                   boxShadow:
-                    "0 18px 60px rgba(0,0,0,0.35), 0 0 28px rgba(255,255,255,0.06), 0 8px 24px rgba(180,83,9,0.06)",
+                    "0 18px 60px rgba(0,0,0,0.35), 0 0 28px rgba(238, 219, 219, 0.06), 0 8px 24px rgba(180,83,9,0.06)",
                 }}
               >
                 Get Your AI Clone

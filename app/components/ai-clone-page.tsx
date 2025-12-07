@@ -202,29 +202,34 @@ export default function AiClonePage() {
 
       {/* Hero Section */}
       {/* ================= FIXED HERO SECTION ================= */}
-      <section className="relative bg-[#C89356] overflow-visible z-0 pt-6 pb-25 rounded-b-[80px] md:rounded-b-[120px]">
+      <section className="relative bg-[#C89356] overflow-visible z-0 pt-24 pb-25 rounded-b-[80px] md:rounded-b-[120px]">
 
 
         {/* HEADINGS */}
         <div className="text-center max-w-4xl mx-auto px-6">
-          <p className="text-white/95 text-sm mb-3 font-bold">No camera. No editing. No tech skills.</p>
+          <p className="text-white/95 text-large mb-3 font-bold">No camera. No editing. No tech skills.</p>
 
-          <h1 className="text-white text-xl md:text-2xl  drop-shadow-xl leading-tight">
+          <h1 className="text-white text-4xl md:text-6xl lg:text-7xl font-normal drop-shadow-xl leading-tight">
             Create Your AI Clone
           </h1>
 
-          <p className="text-[#0b0b0b] text-sm md:text-xl font-semibold mt-2 mb-6 leading-none">
+          <p className="text-[#0b0b0b] text-xl md:text-xl font-semibold mt-2 mb-10 leading-none">
             In Just 30 mins
           </p>
         </div>
 
         {/* VIDEO SECTION */}
-        <div className="max-w-5xl mx-auto relative z-10 px-6">
-          <div className="relative rounded-[50px] overflow-visible shadow-[0_35px_90px_rgba(0,0,0,0.6)]">
+        <div className="max-w-7xl mx-auto relative z-10 px-8 md:px-16 lg:px-24 xl:px-32">
+          <div className="relative rounded-[50px] overflow-hidden shadow-[0_35px_90px_rgba(0,0,0,0.6)]" style={{ height: "400px" }}>
 
-            <img
-              src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&h=900&fit=crop"
-              className="w-full rounded-[50px]"
+            <video
+              src="/test.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover rounded-[50px]"
+              style={{ height: "400px" }}
             />
 
             {/* Bottom Vignette */}
@@ -236,25 +241,13 @@ export default function AiClonePage() {
                   "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.9) 100%)"
               }}
             />
-
-            {/* Play Button */}
-            <button
-              className="absolute inset-0 m-auto w-[90px] h-[90px] rounded-full flex items-center justify-center"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 30%, #ffc37c 0%, #ff9533 40%, #EA580C 100%)",
-                boxShadow: "0 15px 45px rgba(234,88,12,0.45)"
-              }}
-            >
-              <Play size={34} className="text-white ml-0.5" />
-            </button>
           </div>
         </div>
 
         {/* Real Estate Section */}
         <div className="mt-12 text-center max-w-4xl mx-auto px-6">
           <motion.h2
-            className="text-white text-sm md:text-base leading-tight mb-6 drop-shadow-lg"
+            className="text-white text-xl md:text-base leading-tight mb-6 drop-shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -267,12 +260,18 @@ export default function AiClonePage() {
 
           <motion.button
             onClick={() => setIsPurchaseOpen(true)}
-            className="bg-white text-black rounded-full px-5 py-3 font-semibold text-base shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:scale-[1.03] transition"
+            className="bg-white text-black rounded-full px-5 py-3 font-semibold text-base hover:scale-[1.03] transition"
+            style={{
+              boxShadow: "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 20px 60px rgba(0,0,0,0.3)",
+            }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 20px 60px rgba(0,0,0,0.3)",
+            }}
             whileTap={{ scale: 0.98 }}
           >
             Get Your AI Clone At $37
@@ -292,63 +291,66 @@ export default function AiClonePage() {
       {/* ================= END HERO SECTION ================= */}
 
       <section className="w-full py-12 bg-black flex flex-col items-center">
-        {/* Title */}
-        <h2 className="text-xl md:text-2xl  text-white mb-10">
-          Our AI <span className="text-[#D7A059] font-medium">Clones</span>
-        </h2>
+  {/* Title */}
+  <h2 className="text-xl md:text-2xl text-white mb-10">
+    Our AI <span className="text-[#D7A059] font-medium">Clones</span>
+  </h2>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-6 md:px-0">
-  {/* Card 1 */}
-  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
-    <video
-      src="/video.mp4"
-      autoPlay
-      muted
-      loop
-      playsInline
-      className="w-full h-full object-cover"
-    />
+  {/* Outer container – center + side space */}
+  <div className="w-full max-w-6xl px-6 md:px-10">
+    {/* Flex row – equal gap between all 4 */}
+    <div className="flex flex-wrap md:flex-nowrap justify-center gap-6 md:gap-10">
+      {/* Card 1 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[230px] md:w-[260px]">
+        <video
+          src="/video.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Card 2 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[230px] md:w-[260px]">
+        <video
+          src="/video.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Card 3 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[230px] md:w-[260px]">
+        <video
+          src="/video.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Card 4 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[230px] md:w-[260px]">
+        <video
+          src="/video.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      </div>
+    </div>
   </div>
+</section>
 
-  {/* Card 2 */}
-  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
-    <video
-      src="/video.mp4"
-      autoPlay
-      muted
-      loop
-      playsInline
-      className="w-full h-full object-cover"
-    />
-  </div>
-
-  {/* Card 3 */}
-  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
-    <video
-      src="/video.mp4"
-      autoPlay
-      muted
-      loop
-      playsInline
-      className="w-full h-full object-cover"
-    />
-  </div>
-
-  {/* Card 4 */}
-  <div className="bg-[#111] rounded-xl overflow-hidden shadow-lg aspect-[260/380]">
-    <video
-      src="/video.mp4"
-      autoPlay
-      muted
-      loop
-      playsInline
-      className="w-full h-full object-cover"
-    />
-  </div>
-</div>
-
-        
-      </section>
 
       {/* Compare Options Section (adjusted widths/heights & subtler accents) */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
@@ -419,9 +421,13 @@ export default function AiClonePage() {
       className={`
         relative h-full
         ${card.highlight
-          ? "rounded-[38px] bg-[#00B569] text-white shadow-[0_26px_70px_rgba(0,0,0,0.30)] ring-1 ring-black/5"
-          : "rounded-[38px] bg-white text-gray-900 shadow-[0_22px_60px_rgba(0,0,0,0.18)] ring-1 ring-black/5"}
+          ? "rounded-2xl bg-[#00B569] text-white shadow-[0_26px_70px_rgba(0,0,0,0.30)] ring-1 ring-black/5"
+          : "rounded-2xl bg-white text-gray-900 shadow-[0_22px_60px_rgba(0,0,0,0.18)]"}
       `}
+      style={!card.highlight ? {
+        border: "6px solid white",
+        boxShadow: "0 22px 60px rgba(0,0,0,0.18), inset 0 0 0 2px rgba(0,0,0,0.2)",
+      } : {}}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: idx * 0.07 }}
@@ -436,7 +442,7 @@ export default function AiClonePage() {
       </div>
 
       {/* inner card: fixed height + flex column */}
-      <div className="relative flex flex-col h-full px-6 pt-8 pb-6 max-w-[360px] mx-auto">
+      <div className="relative flex flex-col h-full px-8 pt-10 pb-8 max-w-[360px] mx-auto">
         {/* golden gradient in upper right corner only */}
         {!card.highlight && (
           <div
@@ -449,8 +455,8 @@ export default function AiClonePage() {
         )}
 
          {/* HEADER - Top Left */}
-         <div className="relative text-left mb-3">
-           <div className="flex items-center gap-3">
+         <div className="relative text-left mb-0">
+           <div className="flex items-center gap-3 mb-4">
              <div
                className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0
                ${card.highlight ? "bg-white/20" : "bg-gray-100"}`}
@@ -478,7 +484,7 @@ export default function AiClonePage() {
  
            {/* PRICE PILL */}
            <div
-             className={`w-full rounded-xl py-4 flex items-center justify-center shadow-inner
+             className={`w-full rounded-xl py-4 flex items-center justify-center shadow-inner mt-0
              ${card.highlight ? "bg-[#009654]" : "bg-[#F4F4F6]"}`}
            >
              <span
@@ -526,7 +532,7 @@ export default function AiClonePage() {
                  background:
                    "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
                  boxShadow:
-                   "0 16px 40px rgba(0,0,0,0.24), inset 0 6px 18px rgba(255,255,255,0.08)",
+                   "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 16px 40px rgba(0,0,0,0.24), inset 0 6px 18px rgba(255,255,255,0.08)",
                }}
              >
                <span>Get Your AI Clone At $37</span>
@@ -644,9 +650,12 @@ export default function AiClonePage() {
                 padding: "0.9rem 3.2rem",
                 fontSize: "1.05rem",
                 boxShadow:
-                  "0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                  "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
               }}
-              whileHover={{ scale: 1.03 }}
+              whileHover={{ 
+                scale: 1.03,
+                boxShadow: "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+              }}
               whileTap={{ scale: 0.98 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -750,8 +759,8 @@ export default function AiClonePage() {
                       "Social media management included",
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <div className="w-5 h-5 rounded-full bg-[#F59E0B] flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check size={12} className="text-white" />
+                        <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check size={12} className="text-black" />
                         </div>
                         <span className="leading-snug">{item}</span>
                       </li>
@@ -813,8 +822,8 @@ export default function AiClonePage() {
                       "Social Media Management included",
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <div className="w-5 h-5 rounded-full bg-[#F59E0B] flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check size={12} className="text-white" />
+                        <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check size={12} className="text-black" />
                         </div>
                         <span className="leading-snug">{item}</span>
                       </li>
@@ -885,20 +894,6 @@ export default function AiClonePage() {
               </div>
 
               <div className="relative px-6 sm:px-10 lg:px-16 py-20">
-                {/* floating avatars (replace src with your bitmoji images) */}
-                <img
-                  src="/path/to/bitmoji-left.png"
-                  alt="avatar-left"
-                  className="absolute left-12 top-40 w-12 h-12 rounded-full bg-white shadow-md object-cover"
-                  style={{ zIndex: 30 }}
-                />
-                <img
-                  src="/path/to/bitmoji-right.png"
-                  alt="avatar-right"
-                  className="absolute right-14 top-28 w-12 h-12 rounded-full bg-white shadow-md object-cover"
-                  style={{ zIndex: 30 }}
-                />
-
                 {/* Headline */}
                 <h2 className="text-center">
                   <span className="text-4xl md:text-5xl font-extrabold text-black">Get </span>
@@ -922,12 +917,15 @@ export default function AiClonePage() {
                 <div className="mt-10 flex justify-center">
                   <motion.button
                     onClick={routeToProcessFlow}
-                    whileHover={{ scale: 1.03 }}
+                    whileHover={{ 
+                      scale: 1.03,
+                      boxShadow: "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 28px 60px rgba(227,129,38,0.18), 0 8px 40px rgba(227,129,38,0.12), inset 0 6px 18px rgba(255,255,255,0.08)",
+                    }}
                     whileTap={{ scale: 0.98 }}
                     className="rounded-full px-10 py-4 font-bold text-lg md:text-xl"
                     style={{
                       background: "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                      boxShadow: "0 28px 60px rgba(227,129,38,0.18), 0 8px 40px rgba(227,129,38,0.12), inset 0 6px 18px rgba(255,255,255,0.08)",
+                      boxShadow: "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 28px 60px rgba(227,129,38,0.18), 0 8px 40px rgba(227,129,38,0.12), inset 0 6px 18px rgba(255,255,255,0.08)",
                       color: "#111827",
                     }}
                   >
