@@ -335,7 +335,7 @@ export default function AiClonePage() {
           <div className="relative rounded-[50px] overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.6)]" style={{ height: "400px" }}>
 
             <video
-              src="/test.mp4"
+              src="https://res.cloudinary.com/dnhbh2owd/video/upload/v1765114222/test_bfhqve.mp4"
               autoPlay
               muted
               loop
@@ -414,49 +414,41 @@ export default function AiClonePage() {
     <div className="flex flex-wrap md:flex-nowrap justify-center gap-6 md:gap-10">
       {/* Card 1 */}
       <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <video
-          src="/video.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full h-full object-cover"
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
         />
       </div>
 
       {/* Card 2 */}
       <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <video
-          src="/video.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full h-full object-cover"
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
         />
       </div>
 
       {/* Card 3 */}
       <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <video
-          src="/video.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full h-full object-cover"
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
         />
       </div>
 
       {/* Card 4 */}
       <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <video
-          src="/video.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full h-full object-cover"
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
         />
       </div>
     </div>

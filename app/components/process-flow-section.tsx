@@ -321,35 +321,36 @@ export default function ProcessFlowSection() {
             return (
               <div key={step} className="flex flex-col md:flex-row items-center w-full md:w-auto">
                 {/* Mobile: Vertical layout with hand on left */}
-                <div className="flex md:hidden items-center w-full gap-4">
-                  {/* Pointing Hand Emoji with Animation - Mobile (Left side) */}
-                  {isCurrent && (
-                    <motion.div
-                      className="flex items-center gap-2"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <span className="text-xs text-white/80 font-medium">Click here</span>
+                <div className="flex md:hidden items-center w-full justify-center relative">
+                  {/* Fixed width container for hand emoji to maintain alignment */}
+                  <div className="absolute left-0 w-24 flex items-center justify-start">
+                    {isCurrent && (
                       <motion.div
-                        animate={{
-                          x: [0, 8, 0],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                        className="text-3xl"
+                        className="flex items-center gap-2"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
                       >
-                        👉
+                        <span className="text-xs text-white/80 font-medium">Click here</span>
+                        <motion.div
+                          animate={{
+                            x: [0, 8, 0],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
+                          className="text-3xl"
+                        >
+                          👉
+                        </motion.div>
                       </motion.div>
-                    </motion.div>
-                  )}
-                  {!isCurrent && <div className="w-10" />}
+                    )}
+                  </div>
                   
-              <div className="flex flex-col items-center flex-1">
+              <div className="flex flex-col items-center w-full">
                     <motion.div
                       className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl border-4 cursor-pointer transition-all ${
                         isCompleted
@@ -425,7 +426,7 @@ export default function ProcessFlowSection() {
                 <div className="hidden md:flex items-center">
                   <div className="flex flex-col items-center relative">
                     <motion.div
-                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl border-4 cursor-pointer transition-all ${
+                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl border-4 cursor-pointer transition-all whitespace-nowrap ${
                         isCompleted
                           ? "bg-green-500 text-white border-green-500"
                           : isCurrent
@@ -609,7 +610,7 @@ export default function ProcessFlowSection() {
               <div className="text-center mb-8">
                 <Upload className="mx-auto mb-4 text-[#C89356]" size={48} />
                 <h3 className="text-2xl font-bold text-white mb-4">STEP 2 — Upload Video</h3>
-                <p className="text-gray-400">Payment confirmed — please record yourself following the script below and upload your video</p>
+                <p className="text-white">Payment confirmed — please record yourself following the script below and upload your video</p>
               </div>
 
               <div className="space-y-6">
