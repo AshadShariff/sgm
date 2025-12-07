@@ -38,7 +38,7 @@ const satoshi = localFont({
   fallback: ["system-ui", "sans-serif"],
 });
 
-const baseUrl = process.env.APP_BASE_URL || "https://signatureglobalmedia.com";
+const baseUrl = "https://signatureglobalmedia.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

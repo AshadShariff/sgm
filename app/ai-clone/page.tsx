@@ -3,8 +3,8 @@ import Header from "../components/header"
 import AiClonePage from "../components/ai-clone-page"
 
 const baseUrl = "https://signatureglobalmedia.com"
-const canonicalUrl = baseUrl // Canonical points to base domain
-const pageUrl = `${baseUrl}/ai-clone` // Full URL for other uses
+const pageUrl = `${baseUrl}/ai-clone` // Full URL for the page
+const canonicalUrl = pageUrl // Canonical points to the full page URL on Framer site
 
 export const metadata: Metadata = {
   title: "AI Clone — Create Your Digital Twin in 30 Minutes | Signature Global Media",
