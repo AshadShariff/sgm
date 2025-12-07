@@ -2,8 +2,9 @@ import type { Metadata } from "next"
 import Header from "../components/header"
 import AiClonePage from "../components/ai-clone-page"
 
-const baseUrl = process.env.APP_BASE_URL || "https://signatureglobalmedia.com"
-const canonicalUrl = `${baseUrl}/ai-clone`
+const baseUrl = "https://signatureglobalmedia.com"
+const canonicalUrl = baseUrl // Canonical points to base domain
+const pageUrl = `${baseUrl}/ai-clone` // Full URL for other uses
 
 export const metadata: Metadata = {
   title: "AI Clone — Create Your Digital Twin in 30 Minutes | Signature Global Media",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     title: "AI Clone — Create Your Digital Twin in 30 Minutes",
     description:
       "Create your AI video clone in just 30 minutes. No camera, no editing, no tech skills needed. Professional AI videos that market your business.",
-    url: canonicalUrl,
+    url: pageUrl,
     siteName: "Signature Global Media",
     images: [
       {
@@ -84,7 +85,7 @@ export default function AiClone() {
       price: "37.00",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
-      url: canonicalUrl,
+      url: pageUrl,
     },
     aggregateRating: {
       "@type": "AggregateRating",
@@ -126,7 +127,7 @@ export default function AiClone() {
         "@type": "ListItem",
         position: 2,
         name: "AI Clone",
-        item: canonicalUrl,
+        item: pageUrl,
       },
     ],
   }
