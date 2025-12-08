@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X } from "lucide-react"
+import { motion } from "framer-motion"
 import Image from "next/image"
 
 const CONFIG = {
@@ -16,9 +14,7 @@ const CONFIG = {
 }
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const pathname = usePathname()
 
   // Use the main caramel color for the header and hover effect
   const HEADER_COLOR = "#C89356";
@@ -58,9 +54,9 @@ export default function Header() {
 
 
         {/* CTA Button: Updated to match screenshot style and hover text color */}
-        <Link href="/ai-clone#process-flow">
+        <Link href="/ai-clone#process-flow" className="ml-auto">
           <motion.button
-            className={`hidden md:inline-flex items-center justify-center ml-auto px-12 py-2 bg-white text-[#111] rounded-full font-semibold shadow-lg transition-all duration-300 hover:text-[${TEXT_HOVER_COLOR}] hover:scale-105` }
+            className={`inline-flex items-center justify-center px-6 md:px-12 py-2 bg-white text-[#111] rounded-full font-semibold shadow-lg transition-all duration-300 hover:text-[${TEXT_HOVER_COLOR}] hover:scale-105 text-sm md:text-base` }
             whileHover={{
               scale: 1.05,
               // Enhanced white glowing shadow on hover
@@ -77,67 +73,8 @@ export default function Header() {
             Get Your AI Clone
           </motion.button>
         </Link>
-
-        {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`md:hidden p-2 text-white hover:bg-[${TEXT_HOVER_COLOR}] rounded-lg`}
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </nav>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className={`md:hidden bg-[${HEADER_COLOR}]/95 backdrop-blur-sm border-t border-[#92400E]`}
-          >
-            <div className="px-4 py-4 space-y-4">
-              {/* Existing Mobile Links */}
-              <Link
-                href="/"
-                className={`block transition-colors ${pathname === "/" ? "text-[#FCD34D]" : "text-white hover:text-[#FCD34D]"}`}
-                onClick={() => setIsOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/ai-clone"
-                className={`block transition-colors ${pathname === "/ai-clone" ? "text-[#FCD34D]" : "text-white hover:text-[#FCD34D]"
-                  }`}
-                onClick={() => setIsOpen(false)}
-              >
-                AI Clone
-              </Link>
-              <a href="#" className="block text-white hover:text-[#FCD34D] transition-colors">
-                Services
-              </a>
-              <a href="#" className="block text-white hover:text-[#FCD34D] transition-colors">
-                About
-              </a>
-
-              {/* Mobile CTA button (matching pill style but full width) */}
-              <Link
-                href="/ai-clone#process-flow"
-                onClick={() => setIsOpen(false)}
-                // Apply hover color for the mobile button as well
-                className={`w-full px-4 py-3 bg-white text-[#111] rounded-full font-semibold shadow-lg text-center block transition-colors hover:text-[${TEXT_HOVER_COLOR}]`}
-                style={{
-                  boxShadow:
-                    "0 18px 60px rgba(0,0,0,0.35), 0 0 28px rgba(238, 219, 219, 0.06), 0 8px 24px rgba(180,83,9,0.06)",
-                }}
-              >
-                Get Your AI Clone
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.header>
   )
 }

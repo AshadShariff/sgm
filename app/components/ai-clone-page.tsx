@@ -405,57 +405,57 @@ export default function AiClonePage() {
       {/* ================= END HERO SECTION ================= */}
 
       <section className="w-full py-12 bg-black flex flex-col items-center">
-  {/* Title */}
+        {/* Title */}
   <h2 className="text-4xl md:text-4xl text-white mb-10">
     Our AI <span className="text-[#D7A059] font-medium text-4xl">Clones</span>
-  </h2>
+        </h2>
 
   {/* Outer container – center + side space */}
   <div className="w-full max-w-6xl px-6 md:px-10 sm:px-2">
     {/* Flex row – equal gap between all 4 */}
     <div className="flex flex-wrap md:flex-nowrap justify-center gap-6 md:gap-10">
-      {/* Card 1 */}
+  {/* Card 1 */}
       <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
         <iframe
           src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
           className="w-full h-full"
           allow="autoplay; fullscreen; encrypted-media"
           allowFullScreen
-        />
-      </div>
-
-      {/* Card 2 */}
-      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <iframe
-          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
-          className="w-full h-full"
-          allow="autoplay; fullscreen; encrypted-media"
-          allowFullScreen
-        />
-      </div>
-
-      {/* Card 3 */}
-      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <iframe
-          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
-          className="w-full h-full"
-          allow="autoplay; fullscreen; encrypted-media"
-          allowFullScreen
-        />
-      </div>
-
-      {/* Card 4 */}
-      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
-        <iframe
-          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
-          className="w-full h-full"
-          allow="autoplay; fullscreen; encrypted-media"
-          allowFullScreen
-        />
-      </div>
-    </div>
+    />
   </div>
-</section>
+
+  {/* Card 2 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
+    />
+  </div>
+
+  {/* Card 3 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
+    />
+  </div>
+
+  {/* Card 4 */}
+      <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-[9/16] w-[280px] md:w-[260px]">
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
+          className="w-full h-full"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
+    />
+  </div>
+</div>
+  </div>
+      </section>
 
 
       {/* Compare Options Section (adjusted widths/heights & subtler accents) */}
@@ -645,15 +645,15 @@ export default function AiClonePage() {
              >
                <span>{isCheckoutLoading ? "Processing..." : "Get Your AI Clone At $37"}</span>
                {!isCheckoutLoading && (
-                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18">
-                   <path
-                     d="M5 12h14M13 5l6 7-6 7"
-                     stroke="#111827"
-                     strokeWidth="2"
-                     strokeLinecap="round"
-                     strokeLinejoin="round"
-                   />
-                 </svg>
+               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+                 <path
+                   d="M5 12h14M13 5l6 7-6 7"
+                   stroke="#111827"
+                   strokeWidth="2"
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                 />
+               </svg>
                )}
              </button>
            )}
