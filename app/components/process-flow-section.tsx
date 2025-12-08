@@ -1467,7 +1467,7 @@ export default function ProcessFlowSection() {
             
             <div className="space-y-3 mb-6">
               <p className="text-white text-sm md:text-base">
-                Your video has been uploaded, your script has been saved, and your contact information has been recorded. Our team will process your AI avatar and contact you soon.
+                Your video has been uploaded, your script has been saved, and your contact information has been recorded. You will receive your Digital AI Avatar along with your fully edited video as per your script within 24 Hours.
               </p>
               <p className="text-white text-xs md:text-sm">
                 The form is now locked to prevent changes. To start a new order, please refresh.
