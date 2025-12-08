@@ -371,9 +371,16 @@ export default function ProcessFlowSection() {
                 <div className="flex items-center justify-center flex-shrink-0">
                   <div className="flex flex-col items-center relative">
                     <motion.div
-                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl border-4 bg-transparent text-[#C89356] cursor-pointer transition-all whitespace-nowrap ${
-                        isCurrent ? "border-white" : "border-gray-500"
-                      } ${isClickable ? "hover:scale-110" : "cursor-not-allowed opacity-60"}`}
+                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all whitespace-nowrap ${
+                        isClickable ? "hover:scale-110" : "cursor-not-allowed opacity-60"
+                      }`}
+                      style={{
+                        background: "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                        color: "#111827",
+                        boxShadow: isClickable
+                          ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
+                          : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
+                      }}
                       onClick={() => {
                         if (completedSteps.includes(3)) {
                           setError("Process completed! Please refresh to start a new order.")
@@ -418,7 +425,15 @@ export default function ProcessFlowSection() {
                           sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
                         }, 100)
                       }}
-                      whileHover={isClickable ? { scale: 1.1 } : {}}
+                      whileHover={
+                        isClickable
+                          ? {
+                              scale: 1.1,
+                              boxShadow:
+                                "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                            }
+                          : {}
+                      }
                       whileTap={isClickable ? { scale: 0.95 } : {}}
                     >
                       {step}
@@ -492,9 +507,16 @@ export default function ProcessFlowSection() {
                 {/* Step Circle */}
                 <div className="flex flex-col items-center">
                     <motion.div
-                    className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl border-4 bg-transparent text-[#C89356] cursor-pointer transition-all ${
-                      isCurrent ? "border-white" : "border-gray-500"
-                    } ${isClickable ? "hover:scale-110" : "cursor-not-allowed opacity-60"}`}
+                    className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all ${
+                      isClickable ? "hover:scale-110" : "cursor-not-allowed opacity-60"
+                    }`}
+                    style={{
+                      background: "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                      color: "#111827",
+                      boxShadow: isClickable
+                        ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
+                        : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
+                    }}
                       onClick={() => {
                       // Prevent navigation if step 3 is completed
                       if (completedSteps.includes(3)) {
@@ -546,7 +568,15 @@ export default function ProcessFlowSection() {
                           sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
                         }, 100)
                       }}
-                      whileHover={isClickable ? { scale: 1.1 } : {}}
+                      whileHover={
+                        isClickable
+                          ? {
+                              scale: 1.1,
+                              boxShadow:
+                                "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                            }
+                          : {}
+                      }
                       whileTap={isClickable ? { scale: 0.95 } : {}}
                     >
                     {step}
@@ -594,20 +624,39 @@ export default function ProcessFlowSection() {
                                 <h4 className="text-lg font-bold text-white">{pkg.name}</h4>
                                 <span className="text-xl font-bold text-[#C89356]">${pkg.amount}</span>
                               </div>
-                              <button
+                              <motion.button
                                 onClick={() => handleCheckout(pkg.id, pkg.amount)}
                                 disabled={loading}
-                                className="w-full py-2 bg-[#C89356] text-white rounded-lg font-semibold hover:bg-[#B45309] transition-colors disabled:opacity-50"
+                                className="w-full py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{
+                                  background: loading
+                                    ? "#C89356"
+                                    : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                                  color: "#111827",
+                                  boxShadow: loading
+                                    ? "none"
+                                    : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                }}
+                                whileHover={
+                                  !loading
+                                    ? {
+                                        scale: 1.02,
+                                        boxShadow:
+                                          "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                      }
+                                    : {}
+                                }
+                                whileTap={!loading ? { scale: 0.98 } : {}}
                               >
                                 {loading ? (
-                                  <span className="flex items-center justify-center gap-2">
+                                  <span className="flex items-center justify-center gap-2 text-white">
                                     <Loader2 className="animate-spin" size={18} />
                                     Processing...
                                   </span>
                                 ) : (
                                   "Pay & Unlock"
                                 )}
-                              </button>
+                              </motion.button>
                             </div>
                           ))}
                         </div>
@@ -892,20 +941,39 @@ export default function ProcessFlowSection() {
                       <h4 className="text-xl font-bold text-white">{pkg.name}</h4>
                       <span className="text-2xl font-bold text-[#C89356]">${pkg.amount}</span>
                     </div>
-                    <button
+                    <motion.button
                       onClick={() => handleCheckout(pkg.id, pkg.amount)}
                       disabled={loading}
-                      className="w-full py-3 bg-[#C89356] text-white rounded-lg font-semibold hover:bg-[#B45309] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: loading
+                          ? "#C89356"
+                          : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                        color: "#111827",
+                        boxShadow: loading
+                          ? "none"
+                          : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                      }}
+                      whileHover={
+                        !loading
+                          ? {
+                              scale: 1.02,
+                              boxShadow:
+                                "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                            }
+                          : {}
+                      }
+                      whileTap={!loading ? { scale: 0.98 } : {}}
                     >
                       {loading ? (
-                        <span className="flex items-center justify-center gap-2">
+                        <span className="flex items-center justify-center gap-2 text-white">
                           <Loader2 className="animate-spin" size={20} />
                           Processing...
                         </span>
                       ) : (
                         "Pay & Unlock"
                       )}
-                    </button>
+                    </motion.button>
                   </div>
                 ))}
               </div>
@@ -1241,10 +1309,12 @@ export default function ProcessFlowSection() {
         <AnimatePresence>
                 {completedSteps.includes(3) && (
             <motion.div
+              key="completion-modal"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+              style={{ position: 'fixed' }}
               onClick={(e) => {
                 // Prevent closing on backdrop click to maintain flow
                 e.stopPropagation()
@@ -1254,31 +1324,31 @@ export default function ProcessFlowSection() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-[#1a1a1a] border-2 border-[#C89356] rounded-xl p-8 max-w-md w-full text-center"
+                className="bg-[#1a1a1a] border-2 border-[#C89356] rounded-xl p-6 md:p-8 max-w-md w-full mx-4 text-center shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="mb-6">
-                  <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check size={32} className="text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">All Steps Completed!</h3>
-                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <Check size={32} className="text-green-500" />
+                </motion.div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-3">✓ All Steps Completed!</h3>
                 
-                <div className="space-y-4 mb-6">
-                    <p className="text-green-300 text-sm">
-                    Your video has been uploaded, your script has been saved, and your contact information has been recorded.
-                  </p>
-                  <p className="text-white text-sm">
-                    Our team will process your AI avatar and contact you soon.
-                  </p>
-                  <p className="text-gray-400 text-xs">
-                    The form is now locked to prevent changes. To start a new order, please refresh.
+                <div className="space-y-3 mb-6">
+                  <p className="text-white text-sm md:text-base">
+                      Your video has been uploaded, your script has been saved, and your contact information has been recorded. Our team will process your AI avatar and contact you soon.
                     </p>
+                  <p className="text-white text-xs md:text-sm">
+                    The form is now locked to prevent changes. To start a new order, please refresh.
+                  </p>
                   </div>
 
                 <button
                   onClick={handleRefresh}
-                  className="w-full py-3 bg-[#C89356] hover:bg-[#B45309] text-white rounded-lg font-semibold transition-colors"
+                  className="w-full py-3 bg-[#C89356] hover:bg-[#B45309] text-white rounded-lg font-semibold transition-colors text-sm md:text-base"
                 >
                   Refresh & Start New Order
                 </button>
