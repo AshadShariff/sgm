@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Video, StopCircle, Loader2 } from "lucide-react";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 interface VideoRecorderProps {
   onRecordingComplete: (file: File) => void;
@@ -15,6 +17,9 @@ export default function VideoRecorder({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState<
+    "encoding" | "enhancing"
+  >("encoding");
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -22,6 +27,7 @@ export default function VideoRecorder({
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
 
   useEffect(() => {
     startCamera();
@@ -47,15 +53,47 @@ export default function VideoRecorder({
     }
   };
 
+  const loadFFmpeg = async () => {
+    if (!ffmpegRef.current) {
+      const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+      const ffmpeg = new FFmpeg();
+      ffmpeg.on("log", ({ message }) => {
+        console.log("FFmpeg log:", message);
+      });
+      ffmpeg.on("progress", ({ progress }) => {
+        console.log("FFmpeg progress:", progress);
+      });
+      await ffmpeg.load({
+        coreURL: await toBlobURL(
+          "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js",
+          "text/javascript"
+        ),
+        wasmURL: await toBlobURL(
+          "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm",
+          "application/wasm"
+        ),
+      });
+      ffmpegRef.current = ffmpeg;
+    }
+    return ffmpegRef.current;
+  };
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          aspectRatio: 1.77778,
+          frameRate: { ideal: 30, min: 24 },
           facingMode: "user",
         },
-        audio: true,
+        audio: {
+          sampleRate: 48000,
+          channelCount: 2,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
       });
 
       streamRef.current = stream;
@@ -91,11 +129,15 @@ export default function VideoRecorder({
 
       chunksRef.current = [];
 
-      // Optimized: Use VP8 for better playback compatibility and performance
+      let mimeType = "video/webm;codecs=vp9,opus";
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = "video/webm;codecs=vp8,opus";
+      }
+
       const options: MediaRecorderOptions = {
-        mimeType: "video/webm;codecs=vp8,opus",
-        videoBitsPerSecond: 2500000,
-        // No need for fallback checks; VP8 is broadly supported
+        mimeType,
+        videoBitsPerSecond: 8000000,
+        audioBitsPerSecond: 128000,
       };
 
       const mediaRecorder = new MediaRecorder(streamRef.current, options);
@@ -117,8 +159,8 @@ export default function VideoRecorder({
         setIsRecording(false);
       };
 
-      // Optimized: Larger timeslice for fewer chunks (better for short recordings)
-      mediaRecorder.start(200);
+      // Fixed: Remove timeslice to ensure single chunk with proper duration metadata
+      mediaRecorder.start(); // No timeslice arg for full blob on stop
       setIsRecording(true);
       setRecordingTime(0);
 
@@ -146,8 +188,71 @@ export default function VideoRecorder({
     }
   };
 
+  const enhanceVideoWithFFmpeg = async (inputBlob: Blob): Promise<Blob> => {
+    let ffmpeg: FFmpeg;
+    try {
+      ffmpeg = await loadFFmpeg();
+      setProcessingStep("enhancing");
+
+      // Write input to FFmpeg filesystem
+      await ffmpeg.writeFile("input.webm", await fetchFile(inputBlob));
+
+      // Enhanced command: Add -copytb 1 for consistent timebase, -map 0 for all streams
+      await ffmpeg.exec([
+        "-fflags",
+        "+igndts",
+        "-avoid_negative_ts",
+        "make_zero",
+        "-copytb",
+        "1", // Use demuxer timebase to avoid non-monotonic issues
+        "-i",
+        "input.webm",
+        "-map",
+        "0", // Map all streams
+        "-af",
+        "aresample=async=1",
+        "-vf",
+        "hqdn3d=4:3:6,deblock=alpha=0.1:beta=0.1,unsharp=5:5:1.0",
+        "-c:v",
+        "libvpx-vp9",
+        "-crf",
+        "18",
+        "-b:v",
+        "0",
+        "-c:a",
+        "libopus",
+        "-movflags",
+        "+faststart", // Optimize for web playback (though for WebM, helps seeking)
+        "-y",
+        "output.webm",
+      ]);
+
+      // Read enhanced output
+      const data = await ffmpeg.readFile("output.webm");
+      return new Blob([data.buffer], { type: "video/webm" });
+    } catch (enhanceErr: any) {
+      console.warn(
+        "FFmpeg enhancement failed, falling back to raw blob:",
+        enhanceErr
+      );
+      // Cleanup if possible
+      if (ffmpeg) {
+        try {
+          await ffmpeg.deleteFile("input.webm");
+          if (await ffmpeg.exists("output.webm")) {
+            await ffmpeg.deleteFile("output.webm");
+          }
+        } catch {} // Ignore cleanup errors
+      }
+      // Return raw input as fallback
+      return inputBlob;
+    }
+  };
+
   const processRecording = async () => {
     setIsProcessing(true);
+    setProcessingStep("encoding");
+    let finalBlob: Blob;
 
     try {
       console.log(
@@ -157,24 +262,27 @@ export default function VideoRecorder({
       );
 
       const mimeType = mediaRecorderRef.current?.mimeType || "video/webm";
-      const blob = new Blob(chunksRef.current, { type: mimeType });
+      const rawBlob = new Blob(chunksRef.current, { type: mimeType });
 
-      console.log("Blob created:", {
-        size: blob.size,
-        type: blob.type,
+      console.log("Raw Blob created:", {
+        size: rawBlob.size,
+        type: rawBlob.type,
       });
 
-      if (blob.size === 0) {
+      if (rawBlob.size === 0) {
         throw new Error("Recording resulted in empty file");
       }
 
+      // Attempt enhancement; fallback to raw if fails
+      finalBlob = await enhanceVideoWithFFmpeg(rawBlob);
+
       const timestamp = Date.now();
-      const file = new File([blob], `recording-${timestamp}.webm`, {
-        type: mimeType,
+      const file = new File([finalBlob], `recording-${timestamp}.webm`, {
+        type: finalBlob.type || "video/webm",
         lastModified: timestamp,
       });
 
-      console.log("File created:", {
+      console.log("Final File created:", {
         name: file.name,
         size: file.size,
         type: file.type,
@@ -189,8 +297,27 @@ export default function VideoRecorder({
       onRecordingComplete(file);
     } catch (err: any) {
       console.error("Processing error:", err);
-      setError("Failed to process recording. Please try again.");
+      setError(
+        "Failed to process recording. Using raw file as fallback. Please try again if issues persist."
+      );
+      // Fallback to raw if enhancement fully fails
+      if (!finalBlob && chunksRef.current.length > 0) {
+        const mimeType = mediaRecorderRef.current?.mimeType || "video/webm";
+        finalBlob = new Blob(chunksRef.current, { type: mimeType });
+        const timestamp = Date.now();
+        const fallbackFile = new File(
+          [finalBlob],
+          `recording-fallback-${timestamp}.webm`,
+          {
+            type: mimeType,
+            lastModified: timestamp,
+          }
+        );
+        onRecordingComplete(fallbackFile);
+      }
+    } finally {
       setIsProcessing(false);
+      setProcessingStep("encoding");
     }
   };
 
@@ -263,7 +390,11 @@ export default function VideoRecorder({
                 className="mx-auto mb-2 text-white animate-spin"
                 size={48}
               />
-              <p className="text-white text-sm">Processing video...</p>
+              <p className="text-white text-sm">
+                {processingStep === "encoding"
+                  ? "Finalizing recording..."
+                  : "Enhancing quality to reduce pixelation..."}
+              </p>
             </div>
           </div>
         )}
@@ -290,7 +421,7 @@ export default function VideoRecorder({
               whileTap={{ scale: 0.95 }}
             >
               <Video size={20} />
-              Start Recording
+              Start High-Quality Recording
             </motion.button>
             <button
               onClick={onCancel}
@@ -318,10 +449,11 @@ export default function VideoRecorder({
         {!isRecording &&
           countdown === null &&
           !isProcessing &&
-          "Click 'Start Recording' to begin after a 3-second countdown"}
+          "Click 'Start High-Quality Recording' to begin after a 3-second countdown. Keep steady movements and ensure bright, even lighting to minimize pixelation."}
         {isRecording &&
-          "Recording in progress... Click 'Stop Recording' when finished"}
-        {isProcessing && "Please wait while we process your recording..."}
+          "Recording in high quality... Move smoothly to avoid pixelation"}
+        {isProcessing &&
+          "Please wait while we process and enhance your recording..."}
       </p>
     </div>
   );
