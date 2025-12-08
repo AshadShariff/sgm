@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Video, StopCircle, Upload, X, Loader2 } from "lucide-react";
+import { Video, StopCircle, Loader2 } from "lucide-react";
 
 interface VideoRecorderProps {
   onRecordingComplete: (file: File) => void;
@@ -91,19 +91,12 @@ export default function VideoRecorder({
 
       chunksRef.current = [];
 
-      const options = {
-        mimeType: "video/webm;codecs=vp9,opus",
-        videoBitsPerSecond: 2500000, // 2.5 Mbps for good quality
+      // Optimized: Use VP8 for better playback compatibility and performance
+      const options: MediaRecorderOptions = {
+        mimeType: "video/webm;codecs=vp8,opus",
+        videoBitsPerSecond: 2500000,
+        // No need for fallback checks; VP8 is broadly supported
       };
-
-      // Fallback for browsers that don't support vp9
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options.mimeType = "video/webm;codecs=vp8,opus";
-      }
-
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options.mimeType = "video/webm";
-      }
 
       const mediaRecorder = new MediaRecorder(streamRef.current, options);
       mediaRecorderRef.current = mediaRecorder;
@@ -124,11 +117,11 @@ export default function VideoRecorder({
         setIsRecording(false);
       };
 
-      mediaRecorder.start(100); // Collect data every 100ms
+      // Optimized: Larger timeslice for fewer chunks (better for short recordings)
+      mediaRecorder.start(200);
       setIsRecording(true);
       setRecordingTime(0);
 
-      // Start recording timer
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
@@ -157,25 +150,46 @@ export default function VideoRecorder({
     setIsProcessing(true);
 
     try {
-      const blob = new Blob(chunksRef.current, {
-        type: mediaRecorderRef.current?.mimeType || "video/webm",
+      console.log(
+        "Processing recording with",
+        chunksRef.current.length,
+        "chunks"
+      );
+
+      const mimeType = mediaRecorderRef.current?.mimeType || "video/webm";
+      const blob = new Blob(chunksRef.current, { type: mimeType });
+
+      console.log("Blob created:", {
+        size: blob.size,
+        type: blob.type,
       });
 
-      // Create file from blob
+      if (blob.size === 0) {
+        throw new Error("Recording resulted in empty file");
+      }
+
       const timestamp = Date.now();
       const file = new File([blob], `recording-${timestamp}.webm`, {
-        type: blob.type,
+        type: mimeType,
         lastModified: timestamp,
       });
 
-      // Optional: Convert to MP4 if needed (requires additional library)
-      // For now, we'll use WebM which is widely supported
+      console.log("File created:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      // Clean up camera stream before completing
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
 
       onRecordingComplete(file);
     } catch (err: any) {
       console.error("Processing error:", err);
       setError("Failed to process recording. Please try again.");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -190,14 +204,12 @@ export default function VideoRecorder({
 
   return (
     <div className="relative">
-      {/* Error Message */}
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
           {error}
         </div>
       )}
 
-      {/* Video Preview */}
       <div
         className="relative rounded-lg overflow-hidden bg-black"
         style={{ aspectRatio: "16/9" }}
@@ -210,7 +222,6 @@ export default function VideoRecorder({
           className="w-full h-full object-cover"
         />
 
-        {/* Countdown Overlay */}
         <AnimatePresence>
           {countdown !== null && (
             <motion.div
@@ -232,7 +243,6 @@ export default function VideoRecorder({
           )}
         </AnimatePresence>
 
-        {/* Recording Indicator */}
         {isRecording && (
           <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-3 py-2 rounded-full">
             <motion.div
@@ -246,7 +256,6 @@ export default function VideoRecorder({
           </div>
         )}
 
-        {/* Processing Overlay */}
         {isProcessing && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/70">
             <div className="text-center">
@@ -260,7 +269,6 @@ export default function VideoRecorder({
         )}
       </div>
 
-      {/* Controls */}
       <div className="mt-4 flex items-center justify-center gap-4">
         {!isRecording && countdown === null && !isProcessing && (
           <>
@@ -306,7 +314,6 @@ export default function VideoRecorder({
         )}
       </div>
 
-      {/* Info Text */}
       <p className="mt-3 text-center text-sm text-white">
         {!isRecording &&
           countdown === null &&
