@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, Upload, FileText, CreditCard, Loader2, X, User } from "lucide-react"
+import { Check, Upload, FileText, CreditCard, Loader2, X, User, Video } from "lucide-react"
+import VideoRecorder from "./video-recorder"
 
 const RECORDING_SCRIPT = `Hello! I'm feeling confident and relaxed right now. The lighting is good, and my pronunciation is clear. This process is enjoyable. I'll smile and include natural and general hand movements.
 
@@ -22,6 +23,7 @@ export default function ProcessFlowSection() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const sectionRef = useRef<HTMLElement>(null)
   const [buyerInfo, setBuyerInfo] = useState<{ email: string; phone: string; name?: string } | null>(null)
+  const [recordingMode, setRecordingMode] = useState(false);
 
   // Handle hash routing to scroll to process flow section
   useEffect(() => {
@@ -162,28 +164,35 @@ export default function ProcessFlowSection() {
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || [])
+    const selectedFiles = Array.from(e.target.files || []);
     const validFiles = selectedFiles.filter((file) => {
-      const ext = file.name.toLowerCase().match(/\.[^.]+$/)
-      const allowedTypes = [".mp4", ".mov"]
+      const ext = file.name.toLowerCase().match(/\.[^.]+$/);
+      const allowedTypes = [".mp4", ".mov", ".webm"]; // Added .webm
       if (!ext || !allowedTypes.includes(ext[0])) {
-        alert(`Invalid file type: ${file.name}. Only .mp4 and .mov are allowed.`)
-        return false
+        alert(
+          `Invalid file type: ${file.name}. Only .mp4, .mov, and .webm are allowed.`
+        );
+        return false;
       }
       if (file.size > 2 * 1024 * 1024 * 1024) {
-        alert(`File too large: ${file.name}. Maximum size is 2GB.`)
-        return false
+        alert(`File too large: ${file.name}. Maximum size is 2GB.`);
+        return false;
       }
-      return true
-    })
-
+      return true;
+    });
     if (validFiles.length > 0) {
-    setFiles((prev) => [...prev, ...validFiles])
-      // Create preview URL for the first file
-      const previewUrl = URL.createObjectURL(validFiles[0])
-      setVideoPreview(previewUrl)
+      setFiles((prev) => [...prev, ...validFiles]);
+      const previewUrl = URL.createObjectURL(validFiles[0]);
+      setVideoPreview(previewUrl);
     }
-  }
+  };
+
+  const handleRecordingComplete = (file: File) => {
+    setFiles([file]);
+    const previewUrl = URL.createObjectURL(file);
+    setVideoPreview(previewUrl);
+    setRecordingMode(false);
+  };
 
   const handleUpload = async (): Promise<string | undefined> => {
     if (files.length === 0) {
@@ -376,87 +385,343 @@ export default function ProcessFlowSection() {
 
   return (
     <>
-    <section ref={sectionRef} className="py-20 px-4 sm:px-6 lg:px-8 bg-black" id="process-flow">
-      <div className="max-w-4xl mx-auto">
-        <motion.h2
-          className="text-4xl md:text-5xl font-bold mb-16 text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <span className="text-white">The </span>
-          <span className="text-[#C89356]">Process</span>
-        </motion.h2>
+      <section
+        ref={sectionRef}
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-black"
+        id="process-flow"
+      >
+        <div className="max-w-4xl mx-auto">
+          <motion.h2
+            className="text-4xl md:text-5xl font-bold mb-16 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <span className="text-white">The </span>
+            <span className="text-[#C89356]">Process</span>
+          </motion.h2>
 
-        {/* Desktop Stepper - Horizontal */}
-        <div className="hidden md:flex flex-row items-center justify-center mb-12 gap-0">
-          {[1, 2, 3].map((step) => {
-            const isCompleted = completedSteps.includes(step)
-            const isCurrent = currentStep === step
-            const isClickable = 
-              step === 1 || 
-              (step === 2 && completedSteps.includes(1) && paymentStatus === "paid") ||
-              (step === 3 && completedSteps.includes(1) && completedSteps.includes(2) && paymentStatus === "paid" && (uploadedFiles.length > 0 || submissionId))
-            
-            return (
-              <React.Fragment key={step}>
-                <div className="flex items-center justify-center flex-shrink-0">
-                  <div className="flex flex-col items-center relative">
+          {/* Desktop Stepper - Horizontal */}
+          <div className="hidden md:flex flex-row items-center justify-center mb-12 gap-0">
+            {[1, 2, 3].map((step) => {
+              const isCompleted = completedSteps.includes(step);
+              const isCurrent = currentStep === step;
+              const isClickable =
+                step === 1 ||
+                (step === 2 &&
+                  completedSteps.includes(1) &&
+                  paymentStatus === "paid") ||
+                (step === 3 &&
+                  completedSteps.includes(1) &&
+                  completedSteps.includes(2) &&
+                  paymentStatus === "paid" &&
+                  (uploadedFiles.length > 0 || submissionId));
+
+              return (
+                <React.Fragment key={step}>
+                  <div className="flex items-center justify-center flex-shrink-0">
+                    <div className="flex flex-col items-center relative">
+                      <motion.div
+                        className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all whitespace-nowrap ${
+                          isClickable
+                            ? "hover:scale-110"
+                            : "cursor-not-allowed opacity-60"
+                        }`}
+                        style={{
+                          background:
+                            "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                          color: "#111827",
+                          boxShadow: isClickable
+                            ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
+                            : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
+                        }}
+                        onClick={() => {
+                          if (completedSteps.includes(3)) {
+                            setError(
+                              "Process completed! Please refresh to start a new order."
+                            );
+                            return;
+                          }
+                          if (!isClickable) {
+                            if (step === 2) {
+                              setError(
+                                "Please complete Step 1 (Purchase) first before proceeding to Step 2."
+                              );
+                            } else if (step === 3) {
+                              if (
+                                !completedSteps.includes(1) ||
+                                paymentStatus !== "paid"
+                              ) {
+                                setError(
+                                  "Please complete Step 1 and Step 2 first before proceeding to Step 3."
+                                );
+                              } else if (
+                                !completedSteps.includes(2) ||
+                                (uploadedFiles.length === 0 && !submissionId)
+                              ) {
+                                setError(
+                                  "Please complete Step 2 (Upload) first before proceeding to Step 3."
+                                );
+                              }
+                            }
+                            setTimeout(() => {
+                              sectionRef.current?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                              });
+                            }, 100);
+                            return;
+                          }
+                          if (step === 1) {
+                            setCurrentStep(1);
+                            setError(null);
+                          } else if (step === 2) {
+                            if (
+                              completedSteps.includes(1) &&
+                              paymentStatus === "paid"
+                            ) {
+                              setCurrentStep(2);
+                              setError(null);
+                            } else {
+                              setError(
+                                "Please complete Step 1 (Purchase) first before proceeding to Step 2."
+                              );
+                            }
+                          } else if (step === 3) {
+                            if (
+                              !completedSteps.includes(1) ||
+                              paymentStatus !== "paid"
+                            ) {
+                              setError(
+                                "Please complete Step 1 (Purchase) first before proceeding to Step 3."
+                              );
+                            } else if (
+                              !completedSteps.includes(2) ||
+                              (uploadedFiles.length === 0 && !submissionId)
+                            ) {
+                              setError(
+                                "Please complete Step 2 (Upload) first before proceeding to Step 3."
+                              );
+                            } else {
+                              setCurrentStep(3);
+                              setError(null);
+                            }
+                          }
+                          setTimeout(() => {
+                            sectionRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
+                          }, 100);
+                        }}
+                        whileHover={
+                          isClickable
+                            ? {
+                                scale: 1.1,
+                                boxShadow:
+                                  "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                              }
+                            : {}
+                        }
+                        whileTap={isClickable ? { scale: 0.95 } : {}}
+                      >
+                        {step}
+                      </motion.div>
+                      {isCurrent && (
+                        <motion.div
+                          className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center text-3xl"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <span className="text-xs text-white font-medium mb-1">
+                            Click here
+                          </span>
+                          <motion.div
+                            animate={{ y: [0, 8, 0] }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                            }}
+                            style={{
+                              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                            }}
+                          >
+                            👇
+                          </motion.div>
+                        </motion.div>
+                      )}
+                      <div className="mt-2 text-base font-medium text-white text-center">
+                        {step === 1 && "STEP 1"}
+                        {step === 2 && "STEP 2"}
+                        {step === 3 && "STEP 3"}
+                      </div>
+                      <div className="mt-1 text-sm font-medium text-white text-center">
+                        {step === 1 && "Purchase Your AI Clone"}
+                        {step === 2 && (
+                          <>
+                            Upload your raw video by following
+                            <br />
+                            the script/template
+                          </>
+                        )}
+                        {step === 3 && "Get your AI Clone"}
+                      </div>
+                    </div>
+                  </div>
+                  {step < 3 && (
+                    <div className="hidden md:flex items-center w-[120px] flex-shrink-0">
+                      <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
+                      <div
+                        className={`h-0.5 flex-1 transition-colors ${
+                          completedSteps.includes(step + 1) ||
+                          currentStep > step
+                            ? "bg-green-500"
+                            : "bg-white"
+                        }`}
+                      />
+                      <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          {/* Mobile: Sequential Vertical Flow */}
+          <div className="md:hidden space-y-8 mb-12">
+            {/* Error Message for Mobile */}
+            {error && (
+              <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm mb-4">
+                {error}
+              </div>
+            )}
+            {[1, 2, 3].map((step) => {
+              const isCurrent = currentStep === step;
+              const isCompleted = completedSteps.includes(step);
+              const shouldShow =
+                step === 1 ||
+                completedSteps.includes(step - 1) ||
+                (step === 2 && paymentStatus === "paid") ||
+                (step === 3 && completedSteps.includes(2));
+
+              // Step is clickable only if all previous steps are completed
+              const isClickable =
+                step === 1 ||
+                (step === 2 &&
+                  completedSteps.includes(1) &&
+                  paymentStatus === "paid") ||
+                (step === 3 &&
+                  completedSteps.includes(1) &&
+                  completedSteps.includes(2) &&
+                  paymentStatus === "paid" &&
+                  (uploadedFiles.length > 0 || submissionId));
+
+              return (
+                <div key={step} className="space-y-4">
+                  {/* Step Circle */}
+                  <div className="flex flex-col items-center">
                     <motion.div
-                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all whitespace-nowrap ${
-                        isClickable ? "hover:scale-110" : "cursor-not-allowed opacity-60"
+                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all ${
+                        isClickable
+                          ? "hover:scale-110"
+                          : "cursor-not-allowed opacity-60"
                       }`}
                       style={{
-                        background: "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                        background:
+                          "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
                         color: "#111827",
                         boxShadow: isClickable
                           ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
                           : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
                       }}
                       onClick={() => {
+                        // Prevent navigation if step 3 is completed
                         if (completedSteps.includes(3)) {
-                          setError("Process completed! Please refresh to start a new order.")
-                          return
+                          setError(
+                            "Process completed! Please refresh to start a new order."
+                          );
+                          return;
                         }
+
                         if (!isClickable) {
+                          // Show error message based on which step is missing
                           if (step === 2) {
-                            setError("Please complete Step 1 (Purchase) first before proceeding to Step 2.")
+                            setError(
+                              "Please complete Step 1 (Purchase) first before proceeding to Step 2."
+                            );
                           } else if (step === 3) {
-                            if (!completedSteps.includes(1) || paymentStatus !== "paid") {
-                              setError("Please complete Step 1 and Step 2 first before proceeding to Step 3.")
-                            } else if (!completedSteps.includes(2) || (uploadedFiles.length === 0 && !submissionId)) {
-                              setError("Please complete Step 2 (Upload) first before proceeding to Step 3.")
+                            if (
+                              !completedSteps.includes(1) ||
+                              paymentStatus !== "paid"
+                            ) {
+                              setError(
+                                "Please complete Step 1 and Step 2 first before proceeding to Step 3."
+                              );
+                            } else if (
+                              !completedSteps.includes(2) ||
+                              (uploadedFiles.length === 0 && !submissionId)
+                            ) {
+                              setError(
+                                "Please complete Step 2 (Upload) first before proceeding to Step 3."
+                              );
                             }
                           }
                           setTimeout(() => {
-                            sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                          }, 100)
-                          return
+                            sectionRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
+                          }, 100);
+                          return;
                         }
+
+                        // Only allow navigation if previous steps are completed
                         if (step === 1) {
-                          setCurrentStep(1)
-                          setError(null)
+                          setCurrentStep(1);
+                          setError(null);
                         } else if (step === 2) {
-                          if (completedSteps.includes(1) && paymentStatus === "paid") {
-                            setCurrentStep(2)
-                            setError(null)
+                          // Only allow if step 1 is completed
+                          if (
+                            completedSteps.includes(1) &&
+                            paymentStatus === "paid"
+                          ) {
+                            setCurrentStep(2);
+                            setError(null);
                           } else {
-                            setError("Please complete Step 1 (Purchase) first before proceeding to Step 2.")
+                            setError(
+                              "Please complete Step 1 (Purchase) first before proceeding to Step 2."
+                            );
                           }
                         } else if (step === 3) {
-                          if (!completedSteps.includes(1) || paymentStatus !== "paid") {
-                            setError("Please complete Step 1 (Purchase) first before proceeding to Step 3.")
-                          } else if (!completedSteps.includes(2) || (uploadedFiles.length === 0 && !submissionId)) {
-                            setError("Please complete Step 2 (Upload) first before proceeding to Step 3.")
+                          // Only allow if steps 1 and 2 are completed
+                          if (
+                            !completedSteps.includes(1) ||
+                            paymentStatus !== "paid"
+                          ) {
+                            setError(
+                              "Please complete Step 1 and Step 2 first before proceeding to Step 3."
+                            );
+                          } else if (
+                            !completedSteps.includes(2) ||
+                            (uploadedFiles.length === 0 && !submissionId)
+                          ) {
+                            setError(
+                              "Please complete Step 2 (Upload) first before proceeding to Step 3."
+                            );
                           } else {
-                            setCurrentStep(3)
-                            setError(null)
+                            setCurrentStep(3);
+                            setError(null);
                           }
                         }
                         setTimeout(() => {
-                          sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                        }, 100)
+                          sectionRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
+                        }, 100);
                       }}
                       whileHover={
                         isClickable
@@ -471,23 +736,6 @@ export default function ProcessFlowSection() {
                     >
                       {step}
                     </motion.div>
-                    {isCurrent && (
-                      <motion.div
-                        className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center text-3xl"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <span className="text-xs text-white font-medium mb-1">Click here</span>
-                        <motion.div
-                          animate={{ y: [0, 8, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                        >
-                          👇
-                        </motion.div>
-                      </motion.div>
-                    )}
                     <div className="mt-2 text-base font-medium text-white text-center">
                       {step === 1 && "STEP 1"}
                       {step === 2 && "STEP 2"}
@@ -497,170 +745,508 @@ export default function ProcessFlowSection() {
                       {step === 1 && "Purchase Your AI Clone"}
                       {step === 2 && (
                         <>
-                          Upload your raw video by following<br />the script/template
+                          Upload your raw video by following
+                          <br />
+                          the script/template
                         </>
                       )}
                       {step === 3 && "Get your AI Clone"}
                     </div>
                   </div>
-                </div>
-              {step < 3 && (
-                  <div className="hidden md:flex items-center w-[120px] flex-shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
-                    <div className={`h-0.5 flex-1 transition-colors ${
-                      completedSteps.includes(step + 1) || currentStep > step ? "bg-green-500" : "bg-white"
-                    }`} />
-                    <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
-                  </div>
-                )}
-              </React.Fragment>
-            )
-          })}
-                </div>
 
-        {/* Mobile: Sequential Vertical Flow */}
-        <div className="md:hidden space-y-8 mb-12">
-          {/* Error Message for Mobile */}
-          {error && (
-            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm mb-4">{error}</div>
-          )}
-          {[1, 2, 3].map((step) => {
-            const isCurrent = currentStep === step
-            const isCompleted = completedSteps.includes(step)
-            const shouldShow = step === 1 || completedSteps.includes(step - 1) || (step === 2 && paymentStatus === "paid") || (step === 3 && completedSteps.includes(2))
-            
-            // Step is clickable only if all previous steps are completed
-            const isClickable = 
-              step === 1 || 
-              (step === 2 && completedSteps.includes(1) && paymentStatus === "paid") ||
-              (step === 3 && completedSteps.includes(1) && completedSteps.includes(2) && paymentStatus === "paid" && (uploadedFiles.length > 0 || submissionId))
-            
-            return (
-              <div key={step} className="space-y-4">
-                {/* Step Circle */}
-                <div className="flex flex-col items-center">
-                    <motion.div
-                    className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all ${
-                      isClickable ? "hover:scale-110" : "cursor-not-allowed opacity-60"
-                    }`}
-                    style={{
-                      background: "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                      color: "#111827",
-                      boxShadow: isClickable
-                        ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
-                        : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
-                    }}
-                      onClick={() => {
-                      // Prevent navigation if step 3 is completed
-                      if (completedSteps.includes(3)) {
-                        setError("Process completed! Please refresh to start a new order.")
-                        return
-                      }
-                      
-                        if (!isClickable) {
-                          // Show error message based on which step is missing
-                          if (step === 2) {
-                            setError("Please complete Step 1 (Purchase) first before proceeding to Step 2.")
-                          } else if (step === 3) {
-                            if (!completedSteps.includes(1) || paymentStatus !== "paid") {
-                              setError("Please complete Step 1 and Step 2 first before proceeding to Step 3.")
-                            } else if (!completedSteps.includes(2) || (uploadedFiles.length === 0 && !submissionId)) {
-                              setError("Please complete Step 2 (Upload) first before proceeding to Step 3.")
-                            }
-                          }
-                          setTimeout(() => {
-                            sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                          }, 100)
-                          return
-                        }
-                        
-                        // Only allow navigation if previous steps are completed
-                        if (step === 1) {
-                          setCurrentStep(1)
-                          setError(null)
-                        } else if (step === 2) {
-                          // Only allow if step 1 is completed
-                          if (completedSteps.includes(1) && paymentStatus === "paid") {
-                            setCurrentStep(2)
-                            setError(null)
-                          } else {
-                            setError("Please complete Step 1 (Purchase) first before proceeding to Step 2.")
-                          }
-                        } else if (step === 3) {
-                          // Only allow if steps 1 and 2 are completed
-                          if (!completedSteps.includes(1) || paymentStatus !== "paid") {
-                          setError("Please complete Step 1 and Step 2 first before proceeding to Step 3.")
-                          } else if (!completedSteps.includes(2) || (uploadedFiles.length === 0 && !submissionId)) {
-                            setError("Please complete Step 2 (Upload) first before proceeding to Step 3.")
-                          } else {
-                            setCurrentStep(3)
-                            setError(null)
-                          }
-                        }
-                        setTimeout(() => {
-                          sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                        }, 100)
-                      }}
-                      whileHover={
-                        isClickable
-                          ? {
-                              scale: 1.1,
-                              boxShadow:
-                                "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                            }
-                          : {}
-                      }
-                      whileTap={isClickable ? { scale: 0.95 } : {}}
-                    >
-                    {step}
-                    </motion.div>
-                  <div className="mt-2 text-base font-medium text-white text-center">
-                      {step === 1 && "STEP 1"}
-                      {step === 2 && "STEP 2"}
-                      {step === 3 && "STEP 3"}
-                    </div>
-                    <div className="mt-1 text-sm font-medium text-white text-center">
-                      {step === 1 && "Purchase Your AI Clone"}
-                    {step === 2 && (
-                      <>
-                        Upload your raw video by following<br />the script/template
-                      </>
-                    )}
-                    {step === 3 && "Get your AI Clone"}
-                  </div>
-                </div>
+                  {/* Connecting Line */}
+                  {step < 3 && (
+                    <div
+                      className={`w-0.5 h-8 mx-auto transition-colors ${
+                        completedSteps.includes(step + 1) || currentStep > step
+                          ? "bg-green-500"
+                          : "bg-white/30"
+                      }`}
+                    />
+                  )}
 
-                {/* Connecting Line */}
-              {step < 3 && (
-                  <div className={`w-0.5 h-8 mx-auto transition-colors ${
-                        completedSteps.includes(step + 1) || currentStep > step ? "bg-green-500" : "bg-white/30"
-                  }`} />
-                )}
+                  {/* Step Component - Show if step is accessible */}
+                  {shouldShow && (
+                    <div className="mt-4">
+                      {step === 1 && currentStep === 1 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-[#1a1a1a] rounded-xl p-6 border border-[#C89356]"
+                        >
+                          <div className="text-center mb-6">
+                            <CreditCard
+                              className="mx-auto mb-3 text-[#C89356]"
+                              size={40}
+                            />
+                            <h3 className="text-xl font-bold text-white mb-2">
+                              STEP 1 — Purchase Your AI Clone
+                            </h3>
+                          </div>
+                          <div className="space-y-4">
+                            {PACKAGES.map((pkg) => (
+                              <div
+                                key={pkg.id}
+                                className="border-2 border-[#C89356] rounded-lg p-4"
+                              >
+                                <div className="flex justify-between items-center mb-3">
+                                  <h4 className="text-lg font-bold text-white">
+                                    {pkg.name}
+                                  </h4>
+                                  <span className="text-xl font-bold text-[#C89356]">
+                                    ${pkg.amount}
+                                  </span>
+                                </div>
+                                <motion.button
+                                  onClick={() =>
+                                    handleCheckout(pkg.id, pkg.amount)
+                                  }
+                                  disabled={loading}
+                                  className="w-full py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  style={{
+                                    background: loading
+                                      ? "#C89356"
+                                      : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                                    color: "#111827",
+                                    boxShadow: loading
+                                      ? "none"
+                                      : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                  }}
+                                  whileHover={
+                                    !loading
+                                      ? {
+                                          scale: 1.02,
+                                          boxShadow:
+                                            "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                        }
+                                      : {}
+                                  }
+                                  whileTap={!loading ? { scale: 0.98 } : {}}
+                                >
+                                  {loading ? (
+                                    <span className="flex items-center justify-center gap-2 text-white">
+                                      <Loader2
+                                        className="animate-spin"
+                                        size={18}
+                                      />
+                                      Processing...
+                                    </span>
+                                  ) : (
+                                    "Pay & Unlock"
+                                  )}
+                                </motion.button>
+                              </div>
+                            ))}
+                          </div>
+                          {paymentStatus === "pending" && orderId && (
+                            <div className="mt-4 p-3 bg-yellow-900/50 border border-yellow-600 rounded-lg text-center">
+                              <p className="text-yellow-200 text-sm">
+                                Waiting for payment confirmation...
+                              </p>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                      {/* Step 2 Component for Mobile - Show only when current step is 2, hide when completed */}
+                      {step === 2 &&
+                        currentStep === 2 &&
+                        !completedSteps.includes(3) && (
+                          <div className="md:hidden bg-[#1a1a1a] rounded-xl p-6 border border-[#C89356] mt-4">
+                            <div className="text-center mb-6">
+                              <Upload
+                                className="mx-auto mb-3 text-[#C89356]"
+                                size={40}
+                              />
+                              <h3 className="text-xl font-bold text-white mb-2">
+                                STEP 2 — Upload Video
+                              </h3>
+                              <p className="text-white text-sm">
+                                Payment confirmed — please record yourself
+                                following the script below and upload your video
+                              </p>
+                            </div>
+                            <div className="space-y-4">
+                              <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-4">
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                  Please record yourself following this script:
+                                </label>
+                                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#92400E]">
+                                  <p className="text-white whitespace-pre-line leading-relaxed text-sm">
+                                    {RECORDING_SCRIPT}
+                                  </p>
+                                </div>
+                                <p className="mt-2 text-xs text-white">
+                                  Record in a quiet room. Keep camera at eye
+                                  level. Speak clearly and naturally.
+                                </p>
+                              </div>
 
-                {/* Step Component - Show if step is accessible */}
-                {shouldShow && (
-                  <div className="mt-4">
-                    {step === 1 && currentStep === 1 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-[#1a1a1a] rounded-xl p-6 border border-[#C89356]"
-                      >
-                        <div className="text-center mb-6">
-                          <CreditCard className="mx-auto mb-3 text-[#C89356]" size={40} />
-                          <h3 className="text-xl font-bold text-white mb-2">STEP 1 — Purchase Your AI Clone</h3>
-                        </div>
-                        <div className="space-y-4">
-                          {PACKAGES.map((pkg) => (
-                            <div key={pkg.id} className="border-2 border-[#C89356] rounded-lg p-4">
-                              <div className="flex justify-between items-center mb-3">
-                                <h4 className="text-lg font-bold text-white">{pkg.name}</h4>
-                                <span className="text-xl font-bold text-[#C89356]">${pkg.amount}</span>
+                              {!recordingMode && !videoPreview && (
+                                <div className="text-center">
+                                  <motion.button
+                                    onClick={() => setRecordingMode(true)}
+                                    className="mb-3 px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 mx-auto text-sm"
+                                    style={{
+                                      background:
+                                        "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                                      color: "#111827",
+                                      boxShadow:
+                                        "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                  >
+                                    <Video size={18} />
+                                    Record Your Video
+                                  </motion.button>
+                                  <p className="text-white text-xs mb-3">OR</p>
+                                </div>
+                              )}
+
+                              {recordingMode ? (
+                                <VideoRecorder
+                                  onRecordingComplete={handleRecordingComplete}
+                                  onCancel={() => setRecordingMode(false)}
+                                />
+                              ) : (
+                                <div>
+                                  <label className="block text-sm font-semibold text-white mb-2">
+                                    Upload Your Recording{" "}
+                                    <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="border-2 border-dashed border-[#C89356] rounded-lg overflow-hidden relative">
+                                    {videoPreview ? (
+                                      <div className="relative">
+                                        <video
+                                          src={videoPreview}
+                                          controls
+                                          className="w-full h-auto max-h-[300px] object-contain"
+                                        />
+                                        <button
+                                          onClick={() => {
+                                            if (videoPreview)
+                                              URL.revokeObjectURL(videoPreview);
+                                            setVideoPreview(null);
+                                            setFiles([]);
+                                          }}
+                                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
+                                        >
+                                          <X size={18} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="p-6 text-center">
+                                        <input
+                                          type="file"
+                                          accept=".mp4,.mov,.webm"
+                                          onChange={handleFileSelect}
+                                          className="hidden"
+                                          id="file-upload-mobile-step2"
+                                        />
+                                        <label
+                                          htmlFor="file-upload-mobile-step2"
+                                          className="cursor-pointer flex flex-col items-center gap-2"
+                                        >
+                                          <Upload
+                                            size={28}
+                                            className="text-white"
+                                          />
+                                          <span className="text-white text-sm">
+                                            Drag & drop or click to select
+                                          </span>
+                                          <span className="text-xs text-white">
+                                            Max 2GB per file (.mp4, .mov, or
+                                            .webm)
+                                          </span>
+                                        </label>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {uploadedFiles.length > 0 && (
+                                <div className="p-3 bg-green-900/50 border border-green-600 rounded-lg">
+                                  <p className="text-green-200 font-semibold text-sm mb-1">
+                                    ✓ Video uploaded successfully!
+                                  </p>
+                                  <p className="text-green-300 text-xs">
+                                    Proceeding to the next step...
+                                  </p>
+                                </div>
+                              )}
+
+                              {files.length > 0 &&
+                                uploadedFiles.length === 0 && (
+                                  <motion.button
+                                    onClick={async () => {
+                                      if (
+                                        files.length === 0 &&
+                                        uploadedFiles.length === 0
+                                      ) {
+                                        setError(
+                                          "Please upload your video recording"
+                                        );
+                                        return;
+                                      }
+                                      setLoading(true);
+                                      setError(null);
+                                      try {
+                                        let currentSubmissionId = submissionId;
+                                        if (files.length > 0) {
+                                          const newSubmissionId =
+                                            await handleUpload();
+                                          if (newSubmissionId) {
+                                            currentSubmissionId =
+                                              newSubmissionId;
+                                            setSubmissionId(newSubmissionId);
+                                          } else {
+                                            throw new Error(
+                                              "Failed to upload video. Please try again."
+                                            );
+                                          }
+                                        }
+                                        if (!currentSubmissionId) {
+                                          throw new Error(
+                                            "Submission not found. Please upload your video first."
+                                          );
+                                        }
+                                      } catch (err: any) {
+                                        setError(
+                                          err.message ||
+                                            "Failed to upload. Please try again."
+                                        );
+                                      } finally {
+                                        setLoading(false);
+                                      }
+                                    }}
+                                    disabled={
+                                      loading ||
+                                      (files.length === 0 &&
+                                        uploadedFiles.length === 0)
+                                    }
+                                    className="w-full py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    style={{
+                                      background: loading
+                                        ? "#C89356"
+                                        : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                                      color: "#111827",
+                                      boxShadow: loading
+                                        ? "none"
+                                        : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                    }}
+                                    whileHover={!loading ? { scale: 1.02 } : {}}
+                                    whileTap={!loading ? { scale: 0.98 } : {}}
+                                  >
+                                    {loading ? (
+                                      <span className="flex items-center justify-center gap-2 text-white">
+                                        <Loader2
+                                          className="animate-spin"
+                                          size={18}
+                                        />
+                                        Uploading...
+                                      </span>
+                                    ) : (
+                                      "Proceed to Final Step & Add Info"
+                                    )}
+                                  </motion.button>
+                                )}
+                            </div>
+                          </div>
+                        )}
+                      {/* Step 3 Component for Mobile - Show when accessible */}
+                      {step === 3 &&
+                        (currentStep === 3 ||
+                          completedSteps.includes(3) ||
+                          (completedSteps.includes(2) &&
+                            uploadedFiles.length > 0)) && (
+                          <div
+                            className="md:hidden bg-[#1a1a1a] rounded-xl p-6 border border-[#C89356] mt-4"
+                            data-step="3"
+                          >
+                            <div className="text-center mb-6">
+                              <User
+                                className="mx-auto mb-3 text-[#C89356]"
+                                size={40}
+                              />
+                              <h3 className="text-xl font-bold text-white mb-2">
+                                STEP 3 — Contact Information
+                              </h3>
+                              <p className="text-white text-sm">
+                                Please provide your contact information and
+                                script description to complete the process
+                              </p>
+                            </div>
+                            <div className="space-y-4">
+                              <div>
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                  Full Name{" "}
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={name}
+                                  onChange={(e) => setName(e.target.value)}
+                                  disabled={completedSteps.includes(3)}
+                                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  placeholder="Enter your full name"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                  Email Address{" "}
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="email"
+                                  value={email}
+                                  onChange={(e) => setEmail(e.target.value)}
+                                  disabled={completedSteps.includes(3)}
+                                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  placeholder="your.email@example.com"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                  Phone Number{" "}
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="tel"
+                                  value={phone}
+                                  onChange={(e) => setPhone(e.target.value)}
+                                  disabled={completedSteps.includes(3)}
+                                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  placeholder="+1234567890"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                  Script/Prompt Description for Your AI Avatar{" "}
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                  value={customPrompt}
+                                  onChange={(e) =>
+                                    setCustomPrompt(e.target.value)
+                                  }
+                                  disabled={completedSteps.includes(3)}
+                                  rows={5}
+                                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] resize-none disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  placeholder="Write the script or prompt description you want your AI avatar to say..."
+                                />
+                                <p className="mt-1 text-xs text-white">
+                                  This description will be used to generate your
+                                  AI avatar's speech. Be clear and specific.
+                                </p>
                               </div>
                               <motion.button
-                                onClick={() => handleCheckout(pkg.id, pkg.amount)}
-                                disabled={loading}
-                                className="w-full py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={async () => {
+                                  if (
+                                    !name.trim() ||
+                                    !email.trim() ||
+                                    !phone.trim()
+                                  ) {
+                                    setError(
+                                      "Please fill in all contact information fields"
+                                    );
+                                    return;
+                                  }
+                                  if (!customPrompt.trim()) {
+                                    setError(
+                                      "Please write a script description for your AI avatar"
+                                    );
+                                    return;
+                                  }
+                                  const emailRegex =
+                                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                  if (!emailRegex.test(email)) {
+                                    setError(
+                                      "Please enter a valid email address"
+                                    );
+                                    return;
+                                  }
+                                  setLoading(true);
+                                  setError(null);
+                                  try {
+                                    if (!submissionId) {
+                                      throw new Error(
+                                        "Submission not found. Please go back and upload your video first."
+                                      );
+                                    }
+                                    const promptResponse = await fetch(
+                                      `/api/v1/submissions/${submissionId}/custom-prompt`,
+                                      {
+                                        method: "POST",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          customPrompt: customPrompt.trim(),
+                                        }),
+                                      }
+                                    );
+                                    if (!promptResponse.ok) {
+                                      throw new Error(
+                                        "Failed to save script description"
+                                      );
+                                    }
+                                    if (orderId) {
+                                      const response = await fetch(
+                                        `/api/v1/orders/${orderId}`,
+                                        {
+                                          method: "PATCH",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            buyer: {
+                                              name: name.trim(),
+                                              email: email.trim(),
+                                              phone: phone.trim(),
+                                            },
+                                          }),
+                                        }
+                                      );
+                                      if (!response.ok) {
+                                        const errorData = await response
+                                          .json()
+                                          .catch(() => ({
+                                            error:
+                                              "Failed to save contact information",
+                                          }));
+                                        throw new Error(
+                                          errorData.error ||
+                                            "Failed to save contact information"
+                                        );
+                                      }
+                                    }
+                                    setCompletedSteps([1, 2, 3]);
+                                    setError(null);
+                                    setTimeout(() => {
+                                      sectionRef.current?.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "start",
+                                      });
+                                    }, 500);
+                                  } catch (err: any) {
+                                    setError(
+                                      err.message ||
+                                        "Failed to save. Please try again."
+                                    );
+                                  } finally {
+                                    setLoading(false);
+                                  }
+                                }}
+                                disabled={
+                                  loading ||
+                                  !name.trim() ||
+                                  !email.trim() ||
+                                  !phone.trim() ||
+                                  !customPrompt.trim() ||
+                                  completedSteps.includes(3)
+                                }
+                                className="w-full py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                 style={{
                                   background: loading
                                     ? "#C89356"
@@ -671,7 +1257,7 @@ export default function ProcessFlowSection() {
                                     : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
                                 }}
                                 whileHover={
-                                  !loading
+                                  !loading && !completedSteps.includes(3)
                                     ? {
                                         scale: 1.02,
                                         boxShadow:
@@ -679,347 +1265,529 @@ export default function ProcessFlowSection() {
                                       }
                                     : {}
                                 }
-                                whileTap={!loading ? { scale: 0.98 } : {}}
+                                whileTap={
+                                  !loading && !completedSteps.includes(3)
+                                    ? { scale: 0.98 }
+                                    : {}
+                                }
                               >
                                 {loading ? (
                                   <span className="flex items-center justify-center gap-2 text-white">
-                                    <Loader2 className="animate-spin" size={18} />
-                                    Processing...
+                                    <Loader2
+                                      className="animate-spin"
+                                      size={18}
+                                    />
+                                    Saving...
                                   </span>
                                 ) : (
-                                  "Pay & Unlock"
+                                  "Complete & Submit"
                                 )}
                               </motion.button>
                             </div>
-                          ))}
-                        </div>
-                        {paymentStatus === "pending" && orderId && (
-                          <div className="mt-4 p-3 bg-yellow-900/50 border border-yellow-600 rounded-lg text-center">
-                            <p className="text-yellow-200 text-sm">Waiting for payment confirmation...</p>
                           </div>
                         )}
-                      </motion.div>
-                    )}
-                    {/* Step 2 Component for Mobile - Show only when current step is 2, hide when completed */}
-                    {step === 2 && currentStep === 2 && !completedSteps.includes(3) && (
-                      <div className="md:hidden bg-[#1a1a1a] rounded-xl p-6 border border-[#C89356] mt-4">
-                        <div className="text-center mb-6">
-                          <Upload className="mx-auto mb-3 text-[#C89356]" size={40} />
-                          <h3 className="text-xl font-bold text-white mb-2">STEP 2 — Upload Video</h3>
-                          <p className="text-white text-sm">Payment confirmed — please record yourself following the script below and upload your video</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Error Message - Visible on both mobile and desktop */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm md:text-base">
+              {error}
+            </div>
+          )}
+
+          {/* Desktop: Step Components (AnimatePresence) - Hidden on mobile */}
+          <div className="hidden md:block">
+            <AnimatePresence mode="wait">
+              {/* Step 1: Purchase */}
+              {currentStep === 1 && (
+                <motion.div
+                  key="step1"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-[#1a1a1a] rounded-xl p-8 border border-[#C89356]"
+                >
+                  <div className="text-center mb-8">
+                    <CreditCard
+                      className="mx-auto mb-4 text-[#C89356]"
+                      size={48}
+                    />
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      STEP 1 — Purchase Your AI Clone
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    {PACKAGES.map((pkg) => (
+                      <div
+                        key={pkg.id}
+                        className="border-2 border-[#C89356] rounded-lg p-6 hover:border-[#C89356] transition-colors"
+                      >
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-xl font-bold text-white">
+                            {pkg.name}
+                          </h4>
+                          <span className="text-2xl font-bold text-[#C89356]">
+                            ${pkg.amount}
+                          </span>
                         </div>
-                        <div className="space-y-4">
-                          <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-4">
-                            <label className="block text-sm font-semibold text-white mb-2">
-                              Please record yourself following this script:
-                            </label>
-                            <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#92400E]">
-                              <p className="text-white whitespace-pre-line leading-relaxed text-sm">{RECORDING_SCRIPT}</p>
-                            </div>
-                            <p className="mt-2 text-xs text-white">
-                              Record in a quiet room. Keep camera at eye level. Speak clearly and naturally.
-                            </p>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-white mb-2">
-                              Upload Your Recording <span className="text-red-500">*</span>
-                            </label>
-                            <div className="border-2 border-dashed border-[#C89356] rounded-lg overflow-hidden relative">
-                              {videoPreview ? (
-                                <div className="relative">
-                                  <video src={videoPreview} controls className="w-full h-auto max-h-[300px] object-contain" />
-                                  <button
-                                    onClick={() => {
-                                      if (videoPreview) URL.revokeObjectURL(videoPreview)
-                                      setVideoPreview(null)
-                                      setFiles([])
-                                    }}
-                                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
-                                  >
-                                    <X size={18} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="p-6 text-center">
-                                  <input type="file" accept=".mp4,.mov" onChange={handleFileSelect} className="hidden" id="file-upload-mobile-step2" />
-                                  <label htmlFor="file-upload-mobile-step2" className="cursor-pointer flex flex-col items-center gap-2">
-                                    <Upload size={28} className="text-white" />
-                                    <span className="text-white text-sm">Drag & drop or click to select</span>
-                                    <span className="text-xs text-white">Max 2GB per file (.mp4 or .mov)</span>
-                                  </label>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {uploadedFiles.length > 0 && (
-                            <div className="p-3 bg-green-900/50 border border-green-600 rounded-lg">
-                              <p className="text-green-200 font-semibold text-sm mb-1">✓ Video uploaded successfully!</p>
-                              <p className="text-green-300 text-xs">Proceeding to the next step...</p>
-                            </div>
+                        <motion.button
+                          onClick={() => handleCheckout(pkg.id, pkg.amount)}
+                          disabled={loading}
+                          className="w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            background: loading
+                              ? "#C89356"
+                              : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                            color: "#111827",
+                            boxShadow: loading
+                              ? "none"
+                              : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                          }}
+                          whileHover={
+                            !loading
+                              ? {
+                                  scale: 1.02,
+                                  boxShadow:
+                                    "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                                }
+                              : {}
+                          }
+                          whileTap={!loading ? { scale: 0.98 } : {}}
+                        >
+                          {loading ? (
+                            <span className="flex items-center justify-center gap-2 text-white">
+                              <Loader2 className="animate-spin" size={20} />
+                              Processing...
+                            </span>
+                          ) : (
+                            "Pay & Unlock"
                           )}
-                          {files.length > 0 && uploadedFiles.length === 0 && (
-                            <motion.button
-                              onClick={async () => {
-                                if (files.length === 0 && uploadedFiles.length === 0) {
-                                  setError("Please upload your video recording")
-                                  return
-                                }
-                                setLoading(true)
-                                setError(null)
-                                try {
-                                  let currentSubmissionId = submissionId
-                                  if (files.length > 0) {
-                                    const newSubmissionId = await handleUpload()
-                                    if (newSubmissionId) {
-                                      currentSubmissionId = newSubmissionId
-                                      setSubmissionId(newSubmissionId)
-                                    } else {
-                                      throw new Error("Failed to upload video. Please try again.")
-                                    }
-                                  }
-                                  if (!currentSubmissionId) {
-                                    throw new Error("Submission not found. Please upload your video first.")
-                                  }
-                                  // Step 2 will be marked as completed in handleUpload
-                                  // Auto-advance useEffect will handle moving to step 3
-                                } catch (err: any) {
-                                  setError(err.message || "Failed to upload. Please try again.")
-                                } finally {
-                                  setLoading(false)
-                                }
-                              }}
-                              disabled={loading || (files.length === 0 && uploadedFiles.length === 0)}
-                              className="w-full py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              style={{
-                                background: loading
-                                  ? "#C89356"
-                                  : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                                color: "#111827",
-                                boxShadow: loading
-                                  ? "none"
-                                  : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                              }}
-                              whileHover={
-                                !loading
-                                  ? {
-                                      scale: 1.02,
-                                      boxShadow:
-                                        "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                                    }
-                                  : {}
-                              }
-                              whileTap={!loading ? { scale: 0.98 } : {}}
-                            >
-                              {loading ? (
-                                <span className="flex items-center justify-center gap-2 text-white">
-                                  <Loader2 className="animate-spin" size={18} />
-                                  Uploading...
+                        </motion.button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {paymentStatus === "pending" && orderId && (
+                    <div className="mt-6 p-4 bg-yellow-900/50 border border-yellow-600 rounded-lg text-center">
+                      <p className="text-yellow-200">
+                        Waiting for payment confirmation...
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Step 2: Record & Upload Video + Write Script */}
+              {(currentStep === 2 ||
+                (paymentStatus === "paid" && !completedSteps.includes(2))) && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-[#1a1a1a] rounded-xl p-8 border border-[#C89356]"
+                >
+                  <div className="text-center mb-8">
+                    <Upload className="mx-auto mb-4 text-[#C89356]" size={48} />
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      STEP 2 — Upload Video
+                    </h3>
+                    <p className="text-white">
+                      Payment confirmed — please record yourself following the
+                      script below and upload your video
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Script Display */}
+                    <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-6">
+                      <label className="block text-sm font-semibold text-white mb-3">
+                        Please record yourself following this script:
+                      </label>
+                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#92400E]">
+                        <p className="text-white whitespace-pre-line leading-relaxed text-base">
+                          {RECORDING_SCRIPT}
+                        </p>
+                      </div>
+                      <p className="mt-3 text-sm text-white">
+                        Record in a quiet room. Keep camera at eye level. Speak
+                        clearly and naturally.
+                      </p>
+                    </div>
+
+                    {/* Record Button - Show only when not recording and no video preview */}
+                    {!recordingMode && !videoPreview && (
+                      <div className="text-center">
+                        <motion.button
+                          onClick={() => setRecordingMode(true)}
+                          className="mb-4 px-8 py-3 rounded-lg font-semibold flex items-center gap-2 mx-auto"
+                          style={{
+                            background:
+                              "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                            color: "#111827",
+                            boxShadow:
+                              "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                          }}
+                          whileHover={{
+                            scale: 1.05,
+                            boxShadow:
+                              "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Video size={20} />
+                          Record Your Video
+                        </motion.button>
+                        <p className="text-white text-sm mb-3">OR</p>
+                      </div>
+                    )}
+
+                    {/* Show either VideoRecorder or Upload Zone */}
+                    {recordingMode ? (
+                      <VideoRecorder
+                        onRecordingComplete={handleRecordingComplete}
+                        onCancel={() => setRecordingMode(false)}
+                      />
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-semibold text-white mb-2">
+                          Upload Your Recording{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="border-2 border-dashed border-[#C89356] rounded-lg overflow-hidden relative">
+                          {videoPreview ? (
+                            <div className="relative">
+                              <video
+                                src={videoPreview}
+                                controls
+                                className="w-full h-auto max-h-[400px] object-contain"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (videoPreview)
+                                    URL.revokeObjectURL(videoPreview);
+                                  setVideoPreview(null);
+                                  setFiles([]);
+                                }}
+                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors"
+                                title="Remove video"
+                              >
+                                <X size={20} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="p-8 text-center hover:border-[#C89356] transition-colors">
+                              <input
+                                type="file"
+                                accept=".mp4,.mov,.webm"
+                                onChange={handleFileSelect}
+                                className="hidden"
+                                id="file-upload-step2"
+                              />
+                              <label
+                                htmlFor="file-upload-step2"
+                                className="cursor-pointer flex flex-col items-center gap-2"
+                              >
+                                <Upload size={32} className="text-white" />
+                                <span className="text-white">
+                                  Drag & drop or click to select
                                 </span>
-                              ) : (
-                                "Proceed to Final Step & Add Info"
-                              )}
-                            </motion.button>
+                                <span className="text-sm text-white">
+                                  Max 2GB per file (.mp4, .mov, or .webm)
+                                </span>
+                              </label>
+                            </div>
                           )}
                         </div>
                       </div>
                     )}
-                    {/* Step 3 Component for Mobile - Show when accessible */}
-                    {step === 3 && (currentStep === 3 || completedSteps.includes(3) || (completedSteps.includes(2) && uploadedFiles.length > 0)) && (
-                      <div className="md:hidden bg-[#1a1a1a] rounded-xl p-6 border border-[#C89356] mt-4" data-step="3">
-                        <div className="text-center mb-6">
-                          <User className="mx-auto mb-3 text-[#C89356]" size={40} />
-                          <h3 className="text-xl font-bold text-white mb-2">STEP 3 — Contact Information</h3>
-                          <p className="text-white text-sm">Please provide your contact information and script description to complete the process</p>
-                        </div>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-semibold text-white mb-2">
-                              Full Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              disabled={completedSteps.includes(3)}
-                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              placeholder="Enter your full name"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-white mb-2">
-                              Email Address <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="email"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              disabled={completedSteps.includes(3)}
-                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              placeholder="your.email@example.com"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-white mb-2">
-                              Phone Number <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              disabled={completedSteps.includes(3)}
-                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              placeholder="+1234567890"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-white mb-2">
-                              Script/Prompt Description for Your AI Avatar <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                              value={customPrompt}
-                              onChange={(e) => setCustomPrompt(e.target.value)}
-                              disabled={completedSteps.includes(3)}
-                              rows={5}
-                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] resize-none disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              placeholder="Write the script or prompt description you want your AI avatar to say..."
-                            />
-                            <p className="mt-1 text-xs text-white">
-                              This description will be used to generate your AI avatar's speech. Be clear and specific.
-                            </p>
-                          </div>
-                          <motion.button
-                            onClick={async () => {
-                              if (!name.trim() || !email.trim() || !phone.trim()) {
-                                setError("Please fill in all contact information fields")
-                                return
-                              }
-                              if (!customPrompt.trim()) {
-                                setError("Please write a script description for your AI avatar")
-                                return
-                              }
-                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                              if (!emailRegex.test(email)) {
-                                setError("Please enter a valid email address")
-                                return
-                              }
-                              setLoading(true)
-                              setError(null)
-                              try {
-                                if (!submissionId) {
-                                  throw new Error("Submission not found. Please go back and upload your video first.")
-                                }
-                                const promptResponse = await fetch(`/api/v1/submissions/${submissionId}/custom-prompt`, {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ customPrompt: customPrompt.trim() }),
-                                })
-                                if (!promptResponse.ok) {
-                                  throw new Error("Failed to save script description")
-                                }
-                                if (orderId) {
-                                  const response = await fetch(`/api/v1/orders/${orderId}`, {
-                                    method: "PATCH",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      buyer: {
-                                        name: name.trim(),
-                                        email: email.trim(),
-                                        phone: phone.trim(),
-                                      },
-                                    }),
-                                  })
-                                  if (!response.ok) {
-                                    const errorData = await response.json().catch(() => ({ error: "Failed to save contact information" }))
-                                    throw new Error(errorData.error || "Failed to save contact information")
-                                  }
-                                }
-                                setCompletedSteps([1, 2, 3])
-                                setError(null)
-                                setTimeout(() => {
-                                  sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                                }, 500)
-                              } catch (err: any) {
-                                setError(err.message || "Failed to save. Please try again.")
-                              } finally {
-                                setLoading(false)
-                              }
-                            }}
-                            disabled={loading || !name.trim() || !email.trim() || !phone.trim() || !customPrompt.trim() || completedSteps.includes(3)}
-                            className="w-full py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                            style={{
-                              background: loading
-                                ? "#C89356"
-                                : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                              color: "#111827",
-                              boxShadow: loading
-                                ? "none"
-                                : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                            }}
-                            whileHover={
-                              !loading && !completedSteps.includes(3)
-                                ? {
-                                    scale: 1.02,
-                                    boxShadow:
-                                      "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                                  }
-                                : {}
-                            }
-                            whileTap={!loading && !completedSteps.includes(3) ? { scale: 0.98 } : {}}
-                          >
-                            {loading ? (
-                              <span className="flex items-center justify-center gap-2 text-white">
-                                <Loader2 className="animate-spin" size={18} />
-                                Saving...
-                              </span>
-                            ) : (
-                              "Complete & Submit"
-                            )}
-                          </motion.button>
-                        </div>
+
+                    {uploadedFiles.length > 0 && (
+                      <div className="p-4 bg-green-900/50 border border-green-600 rounded-lg">
+                        <p className="text-green-200 font-semibold mb-2">
+                          ✓ Video uploaded successfully!
+                        </p>
+                        <p className="text-green-300 text-sm">
+                          Proceeding to the next step...
+                        </p>
                       </div>
+                    )}
+
+                    {files.length > 0 && uploadedFiles.length === 0 && (
+                      <motion.button
+                        onClick={async () => {
+                          if (
+                            files.length === 0 &&
+                            uploadedFiles.length === 0
+                          ) {
+                            setError("Please upload your video recording");
+                            return;
+                          }
+                          setLoading(true);
+                          setError(null);
+                          try {
+                            let currentSubmissionId = submissionId;
+                            if (files.length > 0) {
+                              const newSubmissionId = await handleUpload();
+                              if (newSubmissionId) {
+                                currentSubmissionId = newSubmissionId;
+                                setSubmissionId(newSubmissionId);
+                              } else {
+                                throw new Error(
+                                  "Failed to upload video. Please try again."
+                                );
+                              }
+                            }
+                            if (!currentSubmissionId) {
+                              throw new Error(
+                                "Submission not found. Please upload your video first."
+                              );
+                            }
+                          } catch (err: any) {
+                            setError(
+                              err.message ||
+                                "Failed to upload. Please try again."
+                            );
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}
+                        disabled={
+                          loading ||
+                          (files.length === 0 && uploadedFiles.length === 0)
+                        }
+                        className="w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          background: loading
+                            ? "#C89356"
+                            : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                          color: "#111827",
+                          boxShadow: loading
+                            ? "none"
+                            : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                        }}
+                        whileHover={
+                          !loading
+                            ? {
+                                scale: 1.02,
+                                boxShadow:
+                                  "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
+                              }
+                            : {}
+                        }
+                        whileTap={!loading ? { scale: 0.98 } : {}}
+                      >
+                        {loading ? (
+                          <span className="flex items-center justify-center gap-2 text-white">
+                            <Loader2 className="animate-spin" size={20} />
+                            Uploading...
+                          </span>
+                        ) : (
+                          "Proceed to Final Step & Add Info"
+                        )}
+                      </motion.button>
                     )}
                   </div>
+                </motion.div>
               )}
-            </div>
-            )
-          })}
-        </div>
 
-        {/* Error Message - Visible on both mobile and desktop */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm md:text-base">{error}</div>
-        )}
+              {/* Step 3: Contact Information */}
+              {currentStep === 3 && (
+                <motion.div
+                  key="step3"
+                  data-step="3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-[#1a1a1a] rounded-xl p-8 border border-[#C89356]"
+                >
+                  <div className="text-center mb-8">
+                    <User className="mx-auto mb-4 text-[#C89356]" size={48} />
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      STEP 3 — Contact Information
+                    </h3>
+                    <p className="text-white">
+                      Please provide your contact information and script
+                      description to complete the process
+                    </p>
+                  </div>
 
-        {/* Desktop: Step Components (AnimatePresence) - Hidden on mobile */}
-        <div className="hidden md:block">
-        <AnimatePresence mode="wait">
-          {/* Step 1: Purchase */}
-          {currentStep === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-[#1a1a1a] rounded-xl p-8 border border-[#C89356]"
-            >
-              <div className="text-center mb-8">
-                <CreditCard className="mx-auto mb-4 text-[#C89356]" size={48} />
-                <h3 className="text-2xl font-bold text-white mb-4">STEP 1 — Purchase Your AI Clone</h3>
-              </div>
-
-              <div className="space-y-4">
-                {PACKAGES.map((pkg) => (
-                  <div
-                    key={pkg.id}
-                    className="border-2 border-[#C89356] rounded-lg p-6 hover:border-[#C89356] transition-colors"
-                  >
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-xl font-bold text-white">{pkg.name}</h4>
-                      <span className="text-2xl font-bold text-[#C89356]">${pkg.amount}</span>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        disabled={completedSteps.includes(3)}
+                        className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="Enter your full name"
+                      />
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={completedSteps.includes(3)}
+                        className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="your.email@example.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Phone Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        disabled={completedSteps.includes(3)}
+                        className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="+1234567890"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Script/Prompt Description for Your AI Avatar{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={customPrompt}
+                        onChange={(e) => setCustomPrompt(e.target.value)}
+                        disabled={completedSteps.includes(3)}
+                        rows={6}
+                        className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="Write the script or prompt description you want your AI avatar to say. For example: 'Hello! Welcome to our real estate services. I'm here to help you find your dream home...'"
+                      />
+                      <p className="mt-2 text-sm text-white">
+                        This description will be used to generate your AI
+                        avatar's speech. Be clear and specific.
+                      </p>
+                    </div>
+
                     <motion.button
-                      onClick={() => handleCheckout(pkg.id, pkg.amount)}
-                      disabled={loading}
+                      onClick={async () => {
+                        if (!name.trim() || !email.trim() || !phone.trim()) {
+                          setError(
+                            "Please fill in all contact information fields"
+                          );
+                          return;
+                        }
+
+                        if (!customPrompt.trim()) {
+                          setError(
+                            "Please write a script description for your AI avatar"
+                          );
+                          return;
+                        }
+
+                        // Validate email format
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(email)) {
+                          setError("Please enter a valid email address");
+                          return;
+                        }
+
+                        setLoading(true);
+                        setError(null);
+
+                        try {
+                          let currentSubmissionId = submissionId;
+
+                          // Ensure we have a submissionId
+                          if (!currentSubmissionId) {
+                            throw new Error(
+                              "Submission not found. Please go back and upload your video first."
+                            );
+                          }
+
+                          // Save custom prompt first
+                          const promptResponse = await fetch(
+                            `/api/v1/submissions/${currentSubmissionId}/custom-prompt`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                customPrompt: customPrompt.trim(),
+                              }),
+                            }
+                          );
+
+                          if (!promptResponse.ok) {
+                            throw new Error(
+                              "Failed to save script description"
+                            );
+                          }
+
+                          // Update order with contact information
+                          if (orderId) {
+                            const response = await fetch(
+                              `/api/v1/orders/${orderId}`,
+                              {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  buyer: {
+                                    name: name.trim(),
+                                    email: email.trim(),
+                                    phone: phone.trim(),
+                                  },
+                                }),
+                              }
+                            );
+
+                            if (!response.ok) {
+                              const errorData = await response
+                                .json()
+                                .catch(() => ({
+                                  error: "Failed to save contact information",
+                                }));
+                              throw new Error(
+                                errorData.error ||
+                                  "Failed to save contact information"
+                              );
+                            }
+                          }
+
+                          setCompletedSteps([1, 2, 3]);
+                          setError(null);
+                          setTimeout(() => {
+                            sectionRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
+                          }, 500);
+                        } catch (err: any) {
+                          setError(
+                            err.message || "Failed to save. Please try again."
+                          );
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={
+                        loading ||
+                        !name.trim() ||
+                        !email.trim() ||
+                        !phone.trim() ||
+                        !customPrompt.trim() ||
+                        completedSteps.includes(3)
+                      }
                       className="w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
                         background: loading
@@ -1031,7 +1799,7 @@ export default function ProcessFlowSection() {
                           : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
                       }}
                       whileHover={
-                        !loading
+                        !loading && !completedSteps.includes(3)
                           ? {
                               scale: 1.02,
                               boxShadow:
@@ -1039,453 +1807,96 @@ export default function ProcessFlowSection() {
                             }
                           : {}
                       }
-                      whileTap={!loading ? { scale: 0.98 } : {}}
+                      whileTap={
+                        !loading && !completedSteps.includes(3)
+                          ? { scale: 0.98 }
+                          : {}
+                      }
                     >
                       {loading ? (
                         <span className="flex items-center justify-center gap-2 text-white">
                           <Loader2 className="animate-spin" size={20} />
-                          Processing...
+                          Saving...
                         </span>
                       ) : (
-                        "Pay & Unlock"
+                        "Complete & Submit"
                       )}
                     </motion.button>
                   </div>
-                ))}
-              </div>
-
-              {paymentStatus === "pending" && orderId && (
-                <div className="mt-6 p-4 bg-yellow-900/50 border border-yellow-600 rounded-lg text-center">
-                  <p className="text-yellow-200">Waiting for payment confirmation...</p>
-                </div>
+                </motion.div>
               )}
-            </motion.div>
-          )}
-
-          {/* Step 2: Record & Upload Video + Write Script */}
-          {(currentStep === 2 || (paymentStatus === "paid" && !completedSteps.includes(2))) && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-[#1a1a1a] rounded-xl p-8 border border-[#C89356]"
-            >
-              <div className="text-center mb-8">
-                <Upload className="mx-auto mb-4 text-[#C89356]" size={48} />
-                <h3 className="text-2xl font-bold text-white mb-4">STEP 2 — Upload Video</h3>
-                <p className="text-white">Payment confirmed — please record yourself following the script below and upload your video</p>
-              </div>
-
-              <div className="space-y-6">
-                {/* Script Display */}
-                <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-6">
-                  <label className="block text-sm font-semibold text-white mb-3">
-                    Please record yourself following this script:
-                  </label>
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#92400E]">
-                    <p className="text-white whitespace-pre-line leading-relaxed text-base">{RECORDING_SCRIPT}</p>
-                </div>
-                  <p className="mt-3 text-sm text-white">
-                    Record in a quiet room. Keep camera at eye level. Speak clearly and naturally.
-                  </p>
-                </div>
-
-                {/* Video Upload */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Upload Your Recording <span className="text-red-500">*</span>
-                  </label>
-                  <div className="border-2 border-dashed border-[#C89356] rounded-lg overflow-hidden relative">
-                    {videoPreview ? (
-                      <div className="relative">
-                        <video
-                          src={videoPreview}
-                          controls
-                          className="w-full h-auto max-h-[400px] object-contain"
-                        />
-                        <button
-                          onClick={() => {
-                            if (videoPreview) {
-                              URL.revokeObjectURL(videoPreview)
-                            }
-                            setVideoPreview(null)
-                            setFiles([])
-                          }}
-                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors"
-                          title="Remove video"
-                        >
-                          <X size={20} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="p-8 text-center hover:border-[#C89356] transition-colors">
-                    <input
-                      type="file"
-                      accept=".mp4,.mov"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="file-upload-step2"
-                    />
-                    <label htmlFor="file-upload-step2" className="cursor-pointer flex flex-col items-center gap-2">
-                          <Upload size={32} className="text-white" />
-                          <span className="text-white">Drag & drop or click to select</span>
-                          <span className="text-sm text-white">Max 2GB per file (.mp4 or .mov)</span>
-                    </label>
-                  </div>
-                    )}
-                </div>
-                      </div>
-
-                {uploadedFiles.length > 0 && (
-                  <div className="p-4 bg-green-900/50 border border-green-600 rounded-lg">
-                    <p className="text-green-200 font-semibold mb-2">✓ Video uploaded successfully!</p>
-                    <p className="text-green-300 text-sm">Proceeding to the next step...</p>
-                  </div>
-                )}
-
-                {files.length > 0 && uploadedFiles.length === 0 && (
-                  <motion.button
-                    onClick={async () => {
-                      if (files.length === 0 && uploadedFiles.length === 0) {
-                        setError("Please upload your video recording")
-                        return
-                      }
-
-                      setLoading(true)
-                      setError(null)
-                      
-                      try {
-                        let currentSubmissionId = submissionId
-                        
-                        // Upload video first if not already uploaded
-                        if (files.length > 0) {
-                          const newSubmissionId = await handleUpload()
-                          if (newSubmissionId) {
-                            currentSubmissionId = newSubmissionId
-                            setSubmissionId(newSubmissionId) // Update state for future use
-                          } else {
-                            throw new Error("Failed to upload video. Please try again.")
-                          }
-                        } else if (uploadedFiles.length > 0 && !currentSubmissionId) {
-                          // Files already uploaded but submissionId missing (e.g., page refresh)
-                          // Try to fetch submission from order
-                          if (orderId) {
-                            try {
-                              const orderResponse = await fetch(`/api/v1/orders/${orderId}`)
-                              if (orderResponse.ok) {
-                                const orderData = await orderResponse.json()
-                                // Try to get submissionId from order's submissions
-                                // For now, we'll need to create a new submission or fetch existing one
-                                // This is an edge case - ideally submissionId should be persisted
-                                throw new Error("Please upload your video again or refresh the page.")
-                              }
-                            } catch (fetchErr) {
-                              // Fall through to error below
-                            }
-                          }
-                          throw new Error("Submission not found. Please upload your video again.")
-                        }
-                        
-                        // Ensure we have a submissionId before proceeding
-                        if (!currentSubmissionId) {
-                          throw new Error("Submission not found. Please upload your video first.")
-                        }
-                        
-                        // Step 2 will be marked as completed in handleUpload
-                        // Auto-advance useEffect will handle moving to step 3
-                      } catch (err: any) {
-                        setError(err.message || "Failed to upload. Please try again.")
-                      } finally {
-                        setLoading(false)
-                      }
-                    }}
-                    disabled={loading || (files.length === 0 && uploadedFiles.length === 0)}
-                    className="w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      background: loading
-                        ? "#C89356"
-                        : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                      color: "#111827",
-                      boxShadow: loading
-                        ? "none"
-                        : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                    }}
-                    whileHover={
-                      !loading
-                        ? {
-                            scale: 1.02,
-                            boxShadow:
-                              "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                          }
-                        : {}
-                    }
-                    whileTap={!loading ? { scale: 0.98 } : {}}
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2 text-white">
-                        <Loader2 className="animate-spin" size={20} />
-                        Uploading...
-                      </span>
-                    ) : (
-                      "Proceed to Final Step & Add Info"
-                    )}
-                  </motion.button>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: Contact Information */}
-          {currentStep === 3 && (
-            <motion.div
-              key="step3"
-              data-step="3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-[#1a1a1a] rounded-xl p-8 border border-[#C89356]"
-            >
-              <div className="text-center mb-8">
-                <User className="mx-auto mb-4 text-[#C89356]" size={48} />
-                <h3 className="text-2xl font-bold text-white mb-4">STEP 3 — Contact Information</h3>
-                <p className="text-white">Please provide your contact information and script description to complete the process</p>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={completedSteps.includes(3)}
-                    className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={completedSteps.includes(3)}
-                    className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={completedSteps.includes(3)}
-                    className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="+1234567890"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Script/Prompt Description for Your AI Avatar <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={customPrompt}
-                    onChange={(e) => setCustomPrompt(e.target.value)}
-                    disabled={completedSteps.includes(3)}
-                    rows={6}
-                    className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#C89356] text-white rounded-lg focus:outline-none focus:border-[#C89356] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="Write the script or prompt description you want your AI avatar to say. For example: 'Hello! Welcome to our real estate services. I'm here to help you find your dream home...'"
-                  />
-                  <p className="mt-2 text-sm text-white">
-                    This description will be used to generate your AI avatar's speech. Be clear and specific.
-                  </p>
-                </div>
-
-                <motion.button
-                  onClick={async () => {
-                    if (!name.trim() || !email.trim() || !phone.trim()) {
-                      setError("Please fill in all contact information fields")
-                      return
-                    }
-
-                    if (!customPrompt.trim()) {
-                      setError("Please write a script description for your AI avatar")
-                      return
-                    }
-
-                    // Validate email format
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                    if (!emailRegex.test(email)) {
-                      setError("Please enter a valid email address")
-                      return
-                    }
-
-                    setLoading(true)
-                    setError(null)
-                    
-                    try {
-                      let currentSubmissionId = submissionId
-                      
-                      // Ensure we have a submissionId
-                      if (!currentSubmissionId) {
-                        throw new Error("Submission not found. Please go back and upload your video first.")
-                      }
-
-                      // Save custom prompt first
-                      const promptResponse = await fetch(`/api/v1/submissions/${currentSubmissionId}/custom-prompt`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ customPrompt: customPrompt.trim() }),
-                      })
-
-                      if (!promptResponse.ok) {
-                        throw new Error("Failed to save script description")
-                      }
-
-                      // Update order with contact information
-                      if (orderId) {
-                        const response = await fetch(`/api/v1/orders/${orderId}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            buyer: {
-                              name: name.trim(),
-                              email: email.trim(),
-                              phone: phone.trim(),
-                            },
-                          }),
-                        })
-
-                        if (!response.ok) {
-                          const errorData = await response.json().catch(() => ({ error: "Failed to save contact information" }))
-                          throw new Error(errorData.error || "Failed to save contact information")
-                        }
-                      }
-
-                      setCompletedSteps([1, 2, 3])
-                      setError(null)
-                      setTimeout(() => {
-                        sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                      }, 500)
-                    } catch (err: any) {
-                      setError(err.message || "Failed to save. Please try again.")
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  disabled={loading || !name.trim() || !email.trim() || !phone.trim() || !customPrompt.trim() || completedSteps.includes(3)}
-                  className="w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: loading
-                      ? "#C89356"
-                      : "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                    color: "#111827",
-                    boxShadow: loading
-                      ? "none"
-                      : "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                  }}
-                  whileHover={
-                    !loading && !completedSteps.includes(3)
-                      ? {
-                          scale: 1.02,
-                          boxShadow:
-                            "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                        }
-                      : {}
-                  }
-                  whileTap={!loading && !completedSteps.includes(3) ? { scale: 0.98 } : {}}
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2 text-white">
-                      <Loader2 className="animate-spin" size={20} />
-                      Saving...
-                    </span>
-                  ) : (
-                    "Complete & Submit"
-                  )}
-                </motion.button>
-
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    {/* Completion Popup Modal - Rendered outside section to avoid overflow issues */}
-    <AnimatePresence>
-      {completedSteps.includes(3) && (
-        <motion.div
-          key="completion-modal"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          style={{ 
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            margin: 0,
-            padding: '1rem'
-          }}
-          onClick={(e) => {
-            // Prevent closing on backdrop click to maintain flow
-            e.stopPropagation()
-          }}
-        >
+      {/* Completion Popup Modal - Rendered outside section to avoid overflow issues */}
+      <AnimatePresence>
+        {completedSteps.includes(3) && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[#1a1a1a] border-2 border-[#C89356] rounded-xl p-6 md:p-8 max-w-md w-full mx-4 text-center shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            key="completion-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              margin: 0,
+              padding: "1rem",
+            }}
+            onClick={(e) => {
+              // Prevent closing on backdrop click to maintain flow
+              e.stopPropagation();
+            }}
           >
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1a1a] border-2 border-[#C89356] rounded-xl p-6 md:p-8 max-w-md w-full mx-4 text-center shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Check size={32} className="text-green-500" />
-            </motion.div>
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-3">✓ All Steps Completed!</h3>
-            
-            <div className="space-y-3 mb-6">
-              <p className="text-white text-sm md:text-base">
-                Your video has been uploaded, your script has been saved, and your contact information has been recorded. You will receive your Digital AI Avatar along with your fully edited video as per your script within 24 Hours.
-              </p>
-              <p className="text-white text-xs md:text-sm">
-                The form is now locked to prevent changes. To start a new order, please refresh.
-              </p>
-            </div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <Check size={32} className="text-green-500" />
+              </motion.div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
+                ✓ All Steps Completed!
+              </h3>
 
-            <button
-              onClick={handleRefresh}
-              className="w-full py-3 bg-[#C89356] hover:bg-[#B45309] text-white rounded-lg font-semibold transition-colors text-sm md:text-base"
-            >
-              Refresh & Start New Order
-            </button>
+              <div className="space-y-3 mb-6">
+                <p className="text-white text-sm md:text-base">
+                  Your video has been uploaded, your script has been saved, and
+                  your contact information has been recorded. You will receive
+                  your Digital AI Avatar along with your fully edited video as
+                  per your script within 24 Hours.
+                </p>
+                <p className="text-white text-xs md:text-sm">
+                  The form is now locked to prevent changes. To start a new
+                  order, please refresh.
+                </p>
+              </div>
+
+              <button
+                onClick={handleRefresh}
+                className="w-full py-3 bg-[#C89356] hover:bg-[#B45309] text-white rounded-lg font-semibold transition-colors text-sm md:text-base"
+              >
+                Refresh & Start New Order
+              </button>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
     </>
-  )
+  );
 }
 
 
