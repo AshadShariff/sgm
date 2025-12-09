@@ -463,21 +463,21 @@ export default function AiClonePage() {
       </section>
       {/* ================= END HERO SECTION ================= */}
 
-      <section className="w-full py-12 bg-black flex flex-col items-center">
+      <section className="w-full py-20 bg-black flex flex-col items-center">
         {/* Title */}
         <div className="flex justify-center gap-4">
-          <h2 className="text-5xl md:text-4xl text-white mb-10">
-          Our AI{" "}
-        </h2>
-          <h1 className="text-[#D7A059] font-medium text-4xl">Clones</h1>
+          <h2 className="text-5xl md:text-5xl text-white mb-10">Our AI </h2>
+          <h1 className="text-[#D7A059] font-medium text-5xl md:text-5xl">
+            Clones
+          </h1>
         </div>
 
         {/* Outer container – center + side space */}
         <div className="w-full max-w-6xl px-6 md:px-10 sm:px-2">
           {/* Flex row – equal gap between all 4 */}
-          <div className="flex flex-wrap md:flex-nowrap justify-center gap-6 md:gap-10">
+          <div className="flex flex-wrap md:flex-nowrap justify-center gap-4 md:gap-4">
             {/* Card 1 */}
-            <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-9/16 w-[280px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -487,7 +487,7 @@ export default function AiClonePage() {
             </div>
 
             {/* Card 2 */}
-            <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-9/16 w-[280px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -497,7 +497,7 @@ export default function AiClonePage() {
             </div>
 
             {/* Card 3 */}
-            <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-9/16 w-[280px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -507,7 +507,7 @@ export default function AiClonePage() {
             </div>
 
             {/* Card 4 */}
-            <div className="bg-[#111] rounded-3xl overflow-hidden shadow-lg aspect-9/16 w-[280px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -666,7 +666,9 @@ export default function AiClonePage() {
                       <div className="flex flex-col">
                         <p
                           className={`text-md font-medium tracking-wide
-                            ${card.highlight ? "text-white/90" : "text-gray-700"}`}
+                            ${
+                              card.highlight ? "text-white/90" : "text-gray-700"
+                            }`}
                         >
                           {card.title}
                         </p>
@@ -687,11 +689,11 @@ export default function AiClonePage() {
                     <div
                       className={`w-full rounded-xl py-4 flex items-center justify-center shadow-inner mt-0
                         ${card.highlight ? "bg-[#009654]" : "bg-[#F4F4F6]"}`}
-                                >
-                                  <span
-                                    className={`text-2xl font-semibold
+                    >
+                      <span
+                        className={`text-2xl font-semibold
                           ${card.highlight ? "text-white" : "text-gray-900"}`}
-                                  >
+                      >
                         {card.price}
                       </span>
                     </div>
@@ -703,7 +705,10 @@ export default function AiClonePage() {
            ${card.highlight ? "text-white" : "text-gray-700"}`}
                   >
                     {card.list.map((txt, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-lg font-medium">
+                      <li
+                        key={i}
+                        className="flex items-start gap-2.5 text-lg font-medium"
+                      >
                         <div
                           className={`w-8 h-8 md:w-5 md:h-5 rounded-full flex items-center justify-center shrink-0 mt-1
                             ${card.highlight ? "bg-white/20" : "bg-[#F2F3F5]"}`}
@@ -1215,8 +1220,8 @@ export default function AiClonePage() {
                 </h2>
 
                 <p className="mt-6 text-center text-lg text-gray-600 max-w-2xl mx-auto">
-                  See your profiles grow, and let&apos;s boost your brand&apos;s earnings
-                  together.
+                  See your profiles grow, and let&apos;s boost your brand&apos;s
+                  earnings together.
                 </p>
 
                 {/* CTA centered */}
