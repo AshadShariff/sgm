@@ -27,6 +27,7 @@ export default function VideoRecorder({
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
   const ffmpegRef = useRef<FFmpeg | null>(null);
 
   useEffect(() => {
@@ -149,8 +150,11 @@ export default function VideoRecorder({
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        await processRecording();
+      mediaRecorder.onstop = () => {
+        // Add delay to ensure final dataavailable event has fired and pushed the last chunk
+        setTimeout(async () => {
+          await processRecording();
+        }, 500);
       };
 
       mediaRecorder.onerror = (event: any) => {
@@ -159,13 +163,18 @@ export default function VideoRecorder({
         setIsRecording(false);
       };
 
-      // Fixed: Remove timeslice to ensure single chunk with proper duration metadata
-      mediaRecorder.start(); // No timeslice arg for full blob on stop
+      // No timeslice for single full blob; rely on FFmpeg re-encoding for metadata fix
+      mediaRecorder.start();
+      startTimeRef.current = Date.now();
       setIsRecording(true);
       setRecordingTime(0);
 
       timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        setRecordingTime(elapsed);
+        if (elapsed >= 120) {
+          stopRecording();
+        }
       }, 1000);
     } catch (err: any) {
       console.error("Recording start error:", err);
@@ -197,10 +206,10 @@ export default function VideoRecorder({
       // Write input to FFmpeg filesystem
       await ffmpeg.writeFile("input.webm", await fetchFile(inputBlob));
 
-      // Enhanced command: Add -copytb 1 for consistent timebase, -map 0 for all streams
+      // Enhanced command: Add -fflags +genpts+igndts for timestamp regeneration, remove -movflags as it's for MP4
       await ffmpeg.exec([
         "-fflags",
-        "+igndts",
+        "+genpts+igndts",
         "-avoid_negative_ts",
         "make_zero",
         "-copytb",
@@ -221,8 +230,6 @@ export default function VideoRecorder({
         "0",
         "-c:a",
         "libopus",
-        "-movflags",
-        "+faststart", // Optimize for web playback (though for WebM, helps seeking)
         "-y",
         "output.webm",
       ]);
