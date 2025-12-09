@@ -13,126 +13,202 @@ const PACKAGES = [
   { id: "ai-clone", name: "Get Your AI Clone", amount: 37 },
 ]
 
+async function uploadToCloudinaryChunked(
+  file: File,
+  uploadParams: any,
+  onProgress?: (progress: number) => void
+): Promise<any> {
+  const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+  // Upload chunks sequentially
+  for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+    const start = chunkIndex * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunk = file.slice(start, end);
+
+    const formData = new FormData();
+    formData.append("file", chunk);
+    formData.append("cloud_name", uploadParams.cloudName);
+    formData.append("timestamp", uploadParams.timestamp.toString());
+    formData.append("signature", uploadParams.signature);
+    formData.append("api_key", uploadParams.apiKey);
+    formData.append("folder", uploadParams.folder);
+    formData.append("public_id", uploadParams.publicId);
+    formData.append("resource_type", "video");
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${uploadParams.cloudName}/video/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error?.message || `Chunk upload failed: ${response.status}`
+      );
+    }
+
+    const progress = Math.round(((chunkIndex + 1) / totalChunks) * 100);
+    if (onProgress) {
+      onProgress(progress);
+    }
+
+    // Only the last chunk returns the full result
+    if (chunkIndex === totalChunks - 1) {
+      return await response.json();
+    }
+  }
+}
+
 export default function ProcessFlowSection() {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [orderId, setOrderId] = useState<string | null>(null)
-  const [submissionId, setSubmissionId] = useState<string | null>(null)
-  const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "failed">("pending")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [completedSteps, setCompletedSteps] = useState<number[]>([])
-  const sectionRef = useRef<HTMLElement>(null)
-  const [buyerInfo, setBuyerInfo] = useState<{ email: string; phone: string; name?: string } | null>(null)
+  const [currentStep, setCurrentStep] = useState(1);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<
+    "pending" | "paid" | "failed"
+  >("pending");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [buyerInfo, setBuyerInfo] = useState<{
+    email: string;
+    phone: string;
+    name?: string;
+  } | null>(null);
   const [recordingMode, setRecordingMode] = useState(false);
 
   // Handle hash routing to scroll to process flow section
   useEffect(() => {
-    const hash = window.location.hash
+    const hash = window.location.hash;
     if (hash === "#process-flow" || hash === "#the-process") {
       setTimeout(() => {
-        sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-      }, 300)
+        sectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 300);
     }
-  }, [])
+  }, []);
 
   // Form state
-  const [customPrompt, setCustomPrompt] = useState("")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
   // Upload state
-  const [files, setFiles] = useState<File[]>([])
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
-  const [videoPreview, setVideoPreview] = useState<string | null>(null)
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
 
   // Check for session_id in URL (return from Stripe)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const sessionId = params.get("session_id")
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
 
     if (sessionId && !orderId) {
-      checkPaymentStatus(sessionId)
+      checkPaymentStatus(sessionId);
     }
-  }, [])
+  }, []);
 
   // Scroll to section when step changes after payment
   useEffect(() => {
     if (currentStep === 2 && paymentStatus === "paid" && sectionRef.current) {
-      // Remove session_id from URL
-      const url = new URL(window.location.href)
-      url.searchParams.delete("session_id")
-      window.history.replaceState({}, "", url.toString())
+      const url = new URL(window.location.href);
+      url.searchParams.delete("session_id");
+      window.history.replaceState({}, "", url.toString());
 
-      // Scroll to section smoothly
       setTimeout(() => {
-        sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-      }, 100)
+        sectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
     }
-  }, [currentStep, paymentStatus])
+  }, [currentStep, paymentStatus]);
 
-  // Auto-advance to step 3 when step 2 is completed (video uploaded)
+  // Auto-advance to step 3 when step 2 is completed
   useEffect(() => {
-    if (completedSteps.includes(2) && uploadedFiles.length > 0 && submissionId && currentStep !== 3 && !completedSteps.includes(3)) {
-      setCurrentStep(3)
-      // Scroll to step 3 after a brief delay to ensure it's rendered
+    if (
+      completedSteps.includes(2) &&
+      uploadedFiles.length > 0 &&
+      submissionId &&
+      currentStep !== 3 &&
+      !completedSteps.includes(3)
+    ) {
+      setCurrentStep(3);
       setTimeout(() => {
-        const step3Element = document.querySelector('[data-step="3"]')
+        const step3Element = document.querySelector('[data-step="3"]');
         if (step3Element) {
-          step3Element.scrollIntoView({ behavior: "smooth", block: "start" })
+          step3Element.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
-          sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          sectionRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }
-      }, 600)
+      }, 600);
     }
-  }, [completedSteps, uploadedFiles.length, submissionId, currentStep])
+  }, [completedSteps, uploadedFiles.length, submissionId, currentStep]);
 
   // Auto-scroll when step 3 is completed
   useEffect(() => {
     if (completedSteps.includes(3) && sectionRef.current) {
       setTimeout(() => {
-        sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-      }, 500)
+        sectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 500);
     }
-  }, [completedSteps])
+  }, [completedSteps]);
 
   const checkPaymentStatus = async (sessionId: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch(`/api/v1/orders/confirm?session_id=${sessionId}`)
-      const data = await response.json()
+      const response = await fetch(
+        `/api/v1/orders/confirm?session_id=${sessionId}`
+      );
+      const data = await response.json();
 
       if (data.orderId) {
-        setOrderId(data.orderId)
-        setPaymentStatus(data.paymentStatus)
+        setOrderId(data.orderId);
+        setPaymentStatus(data.paymentStatus);
         if (data.buyer) {
-          setBuyerInfo(data.buyer)
+          setBuyerInfo(data.buyer);
         }
 
         if (data.paymentStatus === "paid") {
-          setCompletedSteps([1])
-          setCurrentStep(2)
-          // Scroll to section after a brief delay
+          setCompletedSteps([1]);
+          setCurrentStep(2);
           setTimeout(() => {
-            sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-          }, 300)
+            sectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }, 300);
         } else {
-          setTimeout(() => checkPaymentStatus(sessionId), 2000)
+          setTimeout(() => checkPaymentStatus(sessionId), 2000);
         }
       }
     } catch (err) {
-      console.error("Payment check error:", err)
+      console.error("Payment check error:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCheckout = async (packageId: string, amount: number) => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
-      // Stripe will collect email during checkout, phone can be optional
       const response = await fetch("/api/v1/checkout/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -141,33 +217,33 @@ export default function ProcessFlowSection() {
           amount,
           currency: "usd",
           buyer: {
-            email: buyerInfo?.email || "customer@example.com", // Will be updated from Stripe
-            phone: buyerInfo?.phone || "+1234567890", // Will be updated from Stripe if provided
+            email: buyerInfo?.email || "customer@example.com",
+            phone: buyerInfo?.phone || "+1234567890",
           },
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       } else {
-        const errorMessage = data.error || "Failed to create checkout session"
-        setError(errorMessage)
-        console.error("Checkout error:", errorMessage)
+        const errorMessage = data.error || "Failed to create checkout session";
+        setError(errorMessage);
+        console.error("Checkout error:", errorMessage);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to start checkout")
+      setError(err.message || "Failed to start checkout");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const validFiles = selectedFiles.filter((file) => {
       const ext = file.name.toLowerCase().match(/\.[^.]+$/);
-      const allowedTypes = [".mp4", ".mov", ".webm"]; // Added .webm
+      const allowedTypes = [".mp4", ".mov", ".webm"];
       if (!ext || !allowedTypes.includes(ext[0])) {
         alert(
           `Invalid file type: ${file.name}. Only .mp4, .mov, and .webm are allowed.`
@@ -196,83 +272,134 @@ export default function ProcessFlowSection() {
 
   const handleUpload = async (): Promise<string | undefined> => {
     if (files.length === 0) {
-      setError("Please select at least one file")
-      return undefined
+      setError("Please select at least one file");
+      return undefined;
     }
 
     if (!orderId) {
-      setError("Order not found. Please complete payment first.")
-      return
+      setError("Order not found. Please complete payment first.");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
+    setUploadProgress(0);
 
     try {
-      // Create submission if it doesn't exist (for video upload)
-      let currentSubmissionId = submissionId
+      // Create submission if it doesn't exist
+      let currentSubmissionId = submissionId;
       if (!currentSubmissionId) {
-        // Use buyer info from order or defaults
-        const buyerEmail = buyerInfo?.email || "customer@example.com"
-        const buyerPhone = buyerInfo?.phone || "+1234567890"
-        const buyerName = buyerInfo?.name || "User"
-        
-        // Create submission with the recording script as placeholder
-        // The real custom script for AI avatar will be saved in step 3
-        const submissionResponse = await fetch(`/api/v1/orders/${orderId}/submission`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            scriptText: RECORDING_SCRIPT, // Use recording script as placeholder
-            greenScreen: false,
-            email: buyerEmail,
-            phone: buyerPhone,
-            name: buyerName,
-          }),
-        })
+        const buyerEmail = buyerInfo?.email || "customer@example.com";
+        const buyerPhone = buyerInfo?.phone || "+1234567890";
+        const buyerName = buyerInfo?.name || "User";
 
-        const submissionData = await submissionResponse.json()
+        const submissionResponse = await fetch(
+          `/api/v1/orders/${orderId}/submission`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              scriptText: RECORDING_SCRIPT,
+              greenScreen: false,
+              email: buyerEmail,
+              phone: buyerPhone,
+              name: buyerName,
+            }),
+          }
+        );
+
+        const submissionData = await submissionResponse.json();
         if (submissionData.submissionId) {
-          currentSubmissionId = submissionData.submissionId
-          setSubmissionId(currentSubmissionId)
+          currentSubmissionId = submissionData.submissionId;
+          setSubmissionId(currentSubmissionId);
         } else {
-          throw new Error(submissionData.error || "Failed to create submission")
+          throw new Error(
+            submissionData.error || "Failed to create submission"
+          );
         }
       }
 
-      const uploadErrors: string[] = []
-      const successfulUploads: string[] = []
+      const uploadErrors: string[] = [];
+      const successfulUploads: string[] = [];
 
-      console.log(`Starting upload of ${files.length} file(s)...`)
+      console.log(`Starting upload of ${files.length} file(s)...`);
 
-      // Upload each file through our server-side API
+      // Upload each file
       for (const file of files) {
         try {
-          console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+          console.log(
+            `Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(
+              2
+            )} MB)`
+          );
 
-          const formData = new FormData()
-          formData.append("file", file)
+          const formData = new FormData();
+          formData.append("file", file);
           if (currentSubmissionId) {
-            formData.append("submissionId", currentSubmissionId)
+            formData.append("submissionId", currentSubmissionId);
           }
 
+          // First, check if we need chunked upload
           const uploadResponse = await fetch("/api/v1/uploads/upload-video", {
             method: "POST",
             body: formData,
-          })
+          });
 
           if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json().catch(() => ({ error: "Upload failed" }))
-            console.error(`Upload failed for ${file.name}:`, errorData)
-            throw new Error(errorData.error || `Upload failed: ${uploadResponse.status}`)
+            const errorData = await uploadResponse
+              .json()
+              .catch(() => ({ error: "Upload failed" }));
+            console.error(`Upload failed for ${file.name}:`, errorData);
+            throw new Error(
+              errorData.error || `Upload failed: ${uploadResponse.status}`
+            );
           }
 
-          const uploadData = await uploadResponse.json()
-          console.log(`✓ Successfully uploaded: ${file.name}`, uploadData)
-          successfulUploads.push(file.name)
+          const uploadData = await uploadResponse.json();
+
+          // Check if we need to use chunked upload
+          if (uploadData.useChunkedUpload) {
+            console.log(`Using chunked upload for large file: ${file.name}`);
+
+            // Perform chunked upload directly to Cloudinary
+            const cloudinaryResult = await uploadToCloudinaryChunked(
+              file,
+              uploadData.uploadParams,
+              (progress) => {
+                setUploadProgress(progress);
+                console.log(`Upload progress: ${progress}%`);
+              }
+            );
+
+            // Finalize the upload on our server
+            const finalizeResponse = await fetch(
+              "/api/v1/uploads/finalize-upload",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  submissionId: currentSubmissionId,
+                  uploadResult: cloudinaryResult,
+                  filename: file.name,
+                  fileSize: file.size,
+                }),
+              }
+            );
+
+            if (!finalizeResponse.ok) {
+              throw new Error("Failed to finalize chunked upload");
+            }
+
+            console.log(`✓ Successfully uploaded (chunked): ${file.name}`);
+          } else {
+            console.log(`✓ Successfully uploaded: ${file.name}`);
+          }
+
+          successfulUploads.push(file.name);
+          setUploadProgress(100);
         } catch (fileError: any) {
-          console.error(`Error uploading ${file.name}:`, fileError)
-          uploadErrors.push(`${file.name}: ${fileError.message}`)
+          console.error(`Error uploading ${file.name}:`, fileError);
+          uploadErrors.push(`${file.name}: ${fileError.message}`);
         }
       }
 
@@ -281,107 +408,108 @@ export default function ProcessFlowSection() {
           uploadErrors.length > 0
             ? `All uploads failed:\n${uploadErrors.join("\n")}`
             : "No files were successfully uploaded"
-        )
+        );
       }
 
       if (uploadErrors.length > 0) {
-        setError(`Some files failed:\n${uploadErrors.join("\n")}`)
+        setError(`Some files failed:\n${uploadErrors.join("\n")}`);
       }
 
-      // Update UI
-      setUploadedFiles([...uploadedFiles, ...successfulUploads])
-      setFiles([])
-      
-      // Mark step 2 as completed when upload succeeds
+      setUploadedFiles([...uploadedFiles, ...successfulUploads]);
+      setFiles([]);
+
       setCompletedSteps((prev) => {
         if (!prev.includes(2)) {
-          return [...prev, 2]
+          return [...prev, 2];
         }
-        return prev
-      })
+        return prev;
+      });
 
-      console.log(`Upload complete: ${successfulUploads.length} successful, ${uploadErrors.length} failed`)
-      
-      // Return the submissionId so it can be used immediately
-      return currentSubmissionId || undefined
+      console.log(
+        `Upload complete: ${successfulUploads.length} successful, ${uploadErrors.length} failed`
+      );
+
+      return currentSubmissionId || undefined;
     } catch (err: any) {
-      console.error("Upload error:", err)
-      setError(err.message || "Failed to upload files")
-      throw err // Re-throw so the calling function knows it failed
+      console.error("Upload error:", err);
+      setError(err.message || "Failed to upload files");
+      throw err;
     } finally {
-      setLoading(false)
+      setLoading(false);
+      setUploadProgress(0);
     }
-  }
+  };
 
   const handleSaveCustomPrompt = async () => {
     if (!submissionId || !customPrompt.trim()) {
-      return false
+      return false;
     }
 
     try {
-      const response = await fetch(`/api/v1/submissions/${submissionId}/custom-prompt`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customPrompt }),
-      })
+      const response = await fetch(
+        `/api/v1/submissions/${submissionId}/custom-prompt`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customPrompt }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to save custom prompt")
+        throw new Error("Failed to save custom prompt");
       }
 
-      return true
+      return true;
     } catch (err) {
-      console.error("Failed to save custom prompt:", err)
-      return false
+      console.error("Failed to save custom prompt:", err);
+      return false;
     }
-  }
+  };
 
   const removeFile = (index: number) => {
     setFiles((prev) => {
-      const newFiles = prev.filter((_, i) => i !== index)
-      // Clear preview if removing the first file
+      const newFiles = prev.filter((_, i) => i !== index);
       if (index === 0 && videoPreview) {
-        URL.revokeObjectURL(videoPreview)
-        setVideoPreview(newFiles.length > 0 ? URL.createObjectURL(newFiles[0]) : null)
+        URL.revokeObjectURL(videoPreview);
+        setVideoPreview(
+          newFiles.length > 0 ? URL.createObjectURL(newFiles[0]) : null
+        );
       }
-      return newFiles
-    })
-  }
+      return newFiles;
+    });
+  };
 
   const handleRefresh = () => {
-    // Reset all state
-    setCurrentStep(1)
-    setOrderId(null)
-    setSubmissionId(null)
-    setPaymentStatus("pending")
-    setLoading(false)
-    setError(null)
-    setCompletedSteps([])
-    setBuyerInfo(null)
-    setCustomPrompt("")
-    setName("")
-    setEmail("")
-    setPhone("")
-    setFiles([])
-    setUploadedFiles([])
+    setCurrentStep(1);
+    setOrderId(null);
+    setSubmissionId(null);
+    setPaymentStatus("pending");
+    setLoading(false);
+    setError(null);
+    setCompletedSteps([]);
+    setBuyerInfo(null);
+    setCustomPrompt("");
+    setName("");
+    setEmail("");
+    setPhone("");
+    setFiles([]);
+    setUploadedFiles([]);
     if (videoPreview) {
-      URL.revokeObjectURL(videoPreview)
-      setVideoPreview(null)
+      URL.revokeObjectURL(videoPreview);
+      setVideoPreview(null);
     }
-    // Clear URL parameters
-    const url = new URL(window.location.href)
-    url.searchParams.delete("session_id")
-    window.history.replaceState({}, "", url.toString())
-  }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("session_id");
+    window.history.replaceState({}, "", url.toString());
+  };
 
-  // Cleanup video preview URLs on unmount
   useEffect(() => {
     return () => {
       if (videoPreview) {
-        URL.revokeObjectURL(videoPreview)
+        URL.revokeObjectURL(videoPreview);
       }
-    }
-  }, [videoPreview])
+    };
+  }, [videoPreview]);
 
   return (
     <>
@@ -910,6 +1038,23 @@ export default function ProcessFlowSection() {
                                 />
                               ) : (
                                 <div>
+                                  {loading &&
+                                    uploadProgress > 0 &&
+                                    uploadProgress < 100 && (
+                                      <div className="mt-4">
+                                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                                          <div
+                                            className="bg-gradient-to-r from-[#F6C066] to-[#E38826] h-2.5 rounded-full transition-all duration-300"
+                                            style={{
+                                              width: `${uploadProgress}%`,
+                                            }}
+                                          />
+                                        </div>
+                                        <p className="text-white text-sm text-center mt-2">
+                                          Uploading... {uploadProgress}%
+                                        </p>
+                                      </div>
+                                    )}
                                   <label className="block text-sm font-semibold text-white mb-2">
                                     Upload Your Recording{" "}
                                     <span className="text-red-500">*</span>

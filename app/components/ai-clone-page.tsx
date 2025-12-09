@@ -205,6 +205,8 @@ const routeToProcessFlow = () => {
   }
 };
 
+
+
 export default function AiClonePage() {
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -473,11 +475,11 @@ export default function AiClonePage() {
         </div>
 
         {/* Outer container – center + side space */}
-        <div className="w-full max-w-6xl px-6 md:px-10 sm:px-2">
+        <div className="w-full max-w-6xl md:px-10 sm:px-1">
           {/* Flex row – equal gap between all 4 */}
           <div className="flex flex-wrap md:flex-nowrap justify-center gap-4 md:gap-4">
             {/* Card 1 */}
-            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[360px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -487,7 +489,7 @@ export default function AiClonePage() {
             </div>
 
             {/* Card 2 */}
-            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[360px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -497,7 +499,7 @@ export default function AiClonePage() {
             </div>
 
             {/* Card 3 */}
-            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[360px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -507,7 +509,7 @@ export default function AiClonePage() {
             </div>
 
             {/* Card 4 */}
-            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[320px] md:w-[260px]">
+            <div className="bg-[#111] rounded-lg overflow-hidden shadow-lg aspect-9/16 w-[360px] md:w-[260px]">
               <iframe
                 src="https://player.cloudinary.com/embed/?cloud_name=dnhbh2owd&public_id=video_ia98im&profile=cld-default&autoplay=true&loop=true&muted=true"
                 className="w-full h-full"
@@ -520,7 +522,7 @@ export default function AiClonePage() {
       </section>
 
       {/* Compare Options Section (adjusted widths/heights & subtler accents) */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-12 px-2 sm:px-4 lg:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             className="text-center mb-8"
