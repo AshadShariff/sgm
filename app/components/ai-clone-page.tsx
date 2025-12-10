@@ -205,8 +205,6 @@ const routeToProcessFlow = () => {
   }
 };
 
-
-
 export default function AiClonePage() {
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -543,7 +541,7 @@ export default function AiClonePage() {
               See why 500+ agents choose the smart way.
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto max-w-5xl items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mx-auto max-w-5xl items-stretch">
             {[
               {
                 title: "OLD WAY",
@@ -610,18 +608,14 @@ export default function AiClonePage() {
                       ${
                         card.highlight
                           ? "rounded-2xl bg-[#00B569] text-white shadow-[0_26px_70px_rgba(0,0,0,0.30)] ring-1 ring-black/5"
-                          : "rounded-2xl bg-white text-gray-900 shadow-[0_22px_60px_rgba(0,0,0,0.18)]"
+                          : "rounded-2xl bg-white text-gray-900 shadow-[0_22px_60px_rgba(0,0,0,0.18)] ring-1 ring-black/5"
                       }
                     `}
-                style={
-                  !card.highlight
-                    ? {
-                        border: "6px solid white",
-                        boxShadow:
-                          "0 22px 60px rgba(0,0,0,0.18), inset 0 0 0 2px rgba(0,0,0,0.2)",
-                      }
-                    : {}
-                }
+                style={{
+                  border: "6px solid white",
+                  boxShadow:
+                    "0 22px 60px rgba(0,0,0,0.18), inset 0 0 0 2px rgba(0,0,0,0.2)",
+                }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.07 }}
@@ -971,9 +965,14 @@ export default function AiClonePage() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl md:text-5xl text-white mb-3 tracking-tight">
-              Select On <span className="text-[#C89356]">Top Service</span>
-            </h2>
+            <div className="flex justify-center">
+              <h2 className="text-2xl md:text-5xl text-white mb-3 tracking-wide">
+                Select On
+              </h2>
+              <h2 className="text-[#C89356] text-2xl md:text-5xl mb-3 tracking-wide">
+                Top Service
+              </h2>
+            </div>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -1039,7 +1038,10 @@ export default function AiClonePage() {
                       "15 Reels included (professionally edited)",
                       "Social media management included",
                     ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
+                      <li
+                        key={i}
+                        className="flex items-start gap-2.5 font-semibold text-sm"
+                      >
                         <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
                           <Check size={12} className="text-black" />
                         </div>
@@ -1110,9 +1112,15 @@ export default function AiClonePage() {
                       "30 Reels included (professionally edited)",
                       "Social Media Management included",
                     ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check size={12} className="text-black" />
+                      <li
+                        key={i}
+                        className="flex items-start gap-2.5 font-semibold text-sm"
+                      >
+                        <div className="w-5 h-5 rounded-full bg-[#C89356] flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check
+                            size={12}
+                            className="text-white font-semibold"
+                          />
                         </div>
                         <span className="leading-snug">{item}</span>
                       </li>
