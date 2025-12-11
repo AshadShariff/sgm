@@ -1,36 +1,89 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Video, StopCircle, Loader2 } from "lucide-react";
+import {
+  Video,
+  StopCircle,
+  Loader2,
+  X,
+  Check,
+  RotateCcw,
+  ArrowLeft,
+} from "lucide-react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 interface VideoRecorderProps {
   onRecordingComplete: (file: File) => void;
   onCancel: () => void;
+  script?: string;
 }
+
+const RECORDING_DURATION = 30; // 30 seconds fixed duration
 
 export default function VideoRecorder({
   onRecordingComplete,
   onCancel,
+  script = "",
 }: VideoRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [recordingTime, setRecordingTime] = useState(0);
+  const [recordingTime, setRecordingTime] = useState(RECORDING_DURATION);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState<
     "encoding" | "enhancing"
   >("encoding");
   const [error, setError] = useState<string | null>(null);
+  const [recordingStage, setRecordingStage] = useState<
+    "preview" | "recording" | "playback"
+  >("preview");
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playbackVideoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
   const ffmpegRef = useRef<FFmpeg | null>(null);
+  const recordedBlobRef = useRef<Blob | null>(null);
+
+  // Callback ref for the live video element to handle remounting (e.g., after retake)
+  const videoRefCallback = useCallback(
+    (node: HTMLVideoElement | null) => {
+      if (node !== null && recordingStage !== "playback") {
+        setCameraReady(false);
+        if (streamRef.current) {
+          node.srcObject = streamRef.current;
+          const handleMetadata = () => {
+            setCameraReady(true);
+            node.play().catch((e) => console.error("Autoplay failed:", e));
+          };
+          node.onloadedmetadata = handleMetadata;
+        }
+      }
+      videoRef.current = node;
+    },
+    [recordingStage]
+  );
+
+  useEffect(() => {
+    // Detect mobile device
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     startCamera();
@@ -53,6 +106,9 @@ export default function VideoRecorder({
       mediaRecorderRef.current.state !== "inactive"
     ) {
       mediaRecorderRef.current.stop();
+    }
+    if (recordedVideoUrl) {
+      URL.revokeObjectURL(recordedVideoUrl);
     }
   };
 
@@ -102,6 +158,10 @@ export default function VideoRecorder({
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          setCameraReady(true);
+          videoRef.current?.play().catch(console.error);
+        };
       }
     } catch (err: any) {
       console.error("Camera access error:", err);
@@ -153,7 +213,6 @@ export default function VideoRecorder({
       };
 
       mediaRecorder.onstop = () => {
-        // Add delay to ensure final dataavailable event has fired and pushed the last chunk
         setTimeout(async () => {
           await processRecording();
         }, 500);
@@ -165,16 +224,18 @@ export default function VideoRecorder({
         setIsRecording(false);
       };
 
-      // No timeslice for single full blob; rely on FFmpeg re-encoding for metadata fix
       mediaRecorder.start();
       startTimeRef.current = Date.now();
       setIsRecording(true);
-      setRecordingTime(0);
+      setRecordingStage("recording");
+      setRecordingTime(RECORDING_DURATION);
 
       timerRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        setRecordingTime(elapsed);
-        if (elapsed >= 120) {
+        const remaining = RECORDING_DURATION - elapsed;
+        setRecordingTime(remaining);
+
+        if (remaining <= 0) {
           stopRecording();
         }
       }, 1000);
@@ -205,21 +266,19 @@ export default function VideoRecorder({
       ffmpeg = await loadFFmpeg();
       setProcessingStep("enhancing");
 
-      // Write input to FFmpeg filesystem
       await ffmpeg.writeFile("input.webm", await fetchFile(inputBlob));
 
-      // Enhanced command: Add -fflags +genpts+igndts for timestamp regeneration, remove -movflags as it's for MP4
       await ffmpeg.exec([
         "-fflags",
         "+genpts+igndts",
         "-avoid_negative_ts",
         "make_zero",
         "-copytb",
-        "1", // Use demuxer timebase to avoid non-monotonic issues
+        "1",
         "-i",
         "input.webm",
         "-map",
-        "0", // Map all streams
+        "0",
         "-af",
         "aresample=async=1",
         "-vf",
@@ -236,7 +295,6 @@ export default function VideoRecorder({
         "output.webm",
       ]);
 
-      // Read enhanced output
       const data = await ffmpeg.readFile("output.webm");
       return new Blob([data.buffer], { type: "video/webm" });
     } catch (enhanceErr: any) {
@@ -244,16 +302,14 @@ export default function VideoRecorder({
         "FFmpeg enhancement failed, falling back to raw blob:",
         enhanceErr
       );
-      // Cleanup if possible
       if (ffmpeg) {
         try {
           await ffmpeg.deleteFile("input.webm");
           if (await ffmpeg.exists("output.webm")) {
             await ffmpeg.deleteFile("output.webm");
           }
-        } catch {} // Ignore cleanup errors
+        } catch {}
       }
-      // Return raw input as fallback
       return inputBlob;
     }
   };
@@ -282,51 +338,77 @@ export default function VideoRecorder({
         throw new Error("Recording resulted in empty file");
       }
 
-      // Attempt enhancement; fallback to raw if fails
       finalBlob = await enhanceVideoWithFFmpeg(rawBlob);
+      recordedBlobRef.current = finalBlob;
 
-      const timestamp = Date.now();
-      const file = new File([finalBlob], `recording-${timestamp}.webm`, {
-        type: finalBlob.type || "video/webm",
-        lastModified: timestamp,
-      });
-
-      console.log("Final File created:", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
-
-      // Clean up camera stream before completing
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-
-      onRecordingComplete(file);
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(finalBlob);
+      setRecordedVideoUrl(previewUrl);
+      setRecordingStage("playback");
     } catch (err: any) {
       console.error("Processing error:", err);
-      setError(
-        "Failed to process recording. Using raw file as fallback. Please try again if issues persist."
-      );
-      // Fallback to raw if enhancement fully fails
-      if (!finalBlob && chunksRef.current.length > 0) {
+      setError("Failed to process recording. Please try again.");
+
+      if (chunksRef.current.length > 0) {
         const mimeType = mediaRecorderRef.current?.mimeType || "video/webm";
         finalBlob = new Blob(chunksRef.current, { type: mimeType });
-        const timestamp = Date.now();
-        const fallbackFile = new File(
-          [finalBlob],
-          `recording-fallback-${timestamp}.webm`,
-          {
-            type: mimeType,
-            lastModified: timestamp,
-          }
-        );
-        onRecordingComplete(fallbackFile);
+        recordedBlobRef.current = finalBlob;
+        const previewUrl = URL.createObjectURL(finalBlob);
+        setRecordedVideoUrl(previewUrl);
+        setRecordingStage("playback");
       }
     } finally {
       setIsProcessing(false);
       setProcessingStep("encoding");
+    }
+  };
+
+  const handleSubmitRecording = () => {
+    if (!recordedBlobRef.current) {
+      setError("No recording found");
+      return;
+    }
+
+    const timestamp = Date.now();
+    const file = new File(
+      [recordedBlobRef.current],
+      `recording-${timestamp}.webm`,
+      {
+        type: recordedBlobRef.current.type || "video/webm",
+        lastModified: timestamp,
+      }
+    );
+
+    console.log("Submitting File:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
+    // Clean up camera stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    onRecordingComplete(file);
+  };
+
+  const handleRetake = () => {
+    if (recordedVideoUrl) {
+      URL.revokeObjectURL(recordedVideoUrl);
+      setRecordedVideoUrl(null);
+    }
+    recordedBlobRef.current = null;
+    chunksRef.current = [];
+    setRecordingStage("preview");
+    setRecordingTime(RECORDING_DURATION);
+    setCameraReady(false); // Reset to show loading overlay briefly during remount
+    setError(null);
+
+    // Restart camera if needed
+    if (!streamRef.current) {
+      startCamera();
     }
   };
 
@@ -338,132 +420,216 @@ export default function VideoRecorder({
       .padStart(2, "0")}`;
   };
 
+  const containerClass = isMobile
+    ? "fixed inset-0 z-[9999] bg-black"
+    : "relative mx-auto bg-black rounded-lg overflow-hidden";
+
+  const containerStyle = isMobile
+    ? { width: "100vw", height: "100vh" }
+    : { width: "70vw", maxWidth: "1200px", aspectRatio: "16/9" };
+
   return (
-    <div className="relative">
+    <div className={containerClass} style={containerStyle}>
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+        <div className="absolute top-4 left-4 right-4 z-50 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-2 right-2 text-red-700 hover:text-red-900"
+          >
+            <X size={16} />
+          </button>
           {error}
         </div>
       )}
 
-      <div
-        className="relative rounded-lg overflow-hidden bg-black"
-        style={{ aspectRatio: "16/9" }}
-      >
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover"
-        />
+      {/* Preview/Recording Stage */}
+      {recordingStage !== "playback" && (
+        <div className="relative w-full h-full">
+          <video
+            ref={videoRefCallback}
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
 
-        <AnimatePresence>
-          {countdown !== null && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.5 }}
-              className="absolute inset-0 flex items-center justify-center bg-black/50"
-            >
-              <motion.div
-                key={countdown}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                className="text-white text-9xl font-bold"
-              >
-                {countdown}
-              </motion.div>
-            </motion.div>
+          {/* Camera Loading Overlay */}
+          {!cameraReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+              <div className="text-center">
+                <Loader2
+                  className="mx-auto mb-2 text-white animate-spin"
+                  size={48}
+                />
+                <p className="text-white text-sm">Initializing camera...</p>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
 
-        {isRecording && (
-          <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-3 py-2 rounded-full">
-            <motion.div
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-3 h-3 bg-white rounded-full"
-            />
-            <span className="font-semibold text-sm">
-              {formatTime(recordingTime)}
-            </span>
-          </div>
-        )}
+          {/* Countdown Overlay */}
+          <AnimatePresence>
+            {countdown !== null && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.5 }}
+                className="absolute inset-0 flex items-center justify-center bg-black/50 z-40"
+              >
+                <motion.div
+                  key={countdown}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  className="text-white text-9xl font-bold"
+                >
+                  {countdown}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {isProcessing && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-            <div className="text-center">
-              <Loader2
-                className="mx-auto mb-2 text-white animate-spin"
-                size={48}
+          {/* Recording Indicator */}
+          {isRecording && (
+            <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full z-30">
+              <motion.div
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-3 h-3 bg-white rounded-full"
               />
-              <p className="text-white text-sm">
-                {processingStep === "encoding"
-                  ? "Finalizing recording..."
-                  : "Enhancing quality to reduce pixelation..."}
+              <span className="font-bold text-lg">
+                {formatTime(recordingTime)}
+              </span>
+            </div>
+          )}
+
+          {/* Script Instructions Overlay */}
+          {cameraReady && recordingStage === "preview" && script && (
+            <div className="absolute top-20 left-0 right-0  to-transparent p-6 z-20">
+              <div className="max-w-3xl mx-auto">
+                {/* <h3 className="text-white font-bold text-lg mb-3 text-center">
+                  Follow This Script:
+                </h3> */}
+                <div className="bg-black/20 rounded-lg p-4 backdrop-blur-sm border border-white/20">
+                  <p className="text-white text-sm md:text-base leading-relaxed whitespace-pre-line text-center">
+                    {script}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Recording Instructions Overlay */}
+          {isRecording && (
+            <div className="absolute bottom-20 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 z-20">
+              <div className="max-w-2xl mx-auto text-center">
+                <p className="text-white text-lg font-semibold mb-2">
+                  Recording in Progress
+                </p>
+                <p className="text-white/90 text-sm">
+                  Speak clearly and maintain eye contact with the camera
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Control Buttons */}
+          <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 z-30 px-4">
+            {!isRecording &&
+              countdown === null &&
+              !isProcessing &&
+              cameraReady && (
+                <>
+                  <motion.button
+                    onClick={startCountdown}
+                    className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg shadow-2xl"
+                    style={{
+                      background:
+                        "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                      color: "#111827",
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Video size={24} />
+                    Start Recording
+                  </motion.button>
+                  <motion.button
+                    onClick={onCancel}
+                    className="flex items-center gap-2 px-6 py-4 bg-gray-600/90 hover:bg-gray-700 text-white rounded-full font-semibold backdrop-blur-sm"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <ArrowLeft size={20} />
+                    Back
+                  </motion.button>
+                </>
+              )}
+          </div>
+
+          {/* Processing Overlay */}
+          {isProcessing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-40">
+              <div className="text-center">
+                <Loader2
+                  className="mx-auto mb-4 text-white animate-spin"
+                  size={64}
+                />
+                <p className="text-white text-xl font-semibold mb-2">
+                  {processingStep === "encoding"
+                    ? "Finalizing recording..."
+                    : "Enhancing video quality..."}
+                </p>
+                <p className="text-white/70 text-sm">This may take a moment</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Playback Stage */}
+      {recordingStage === "playback" && recordedVideoUrl && (
+        <div className="relative w-full h-full bg-black">
+          <video
+            ref={playbackVideoRef}
+            src={recordedVideoUrl}
+            controls
+            className="w-full h-full object-contain"
+          />
+
+          {/* Playback Controls Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-6 z-30">
+            <div className="max-w-2xl mx-auto">
+              <p className="text-white text-center font-semibold text-lg mb-4">
+                Review Your Recording
               </p>
+              <div className="flex items-center justify-center gap-4">
+                <motion.button
+                  onClick={handleSubmitRecording}
+                  className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg shadow-2xl"
+                  style={{
+                    background:
+                      "linear-gradient(90deg,#10B981 0%, #059669 50%, #047857 100%)",
+                    color: "white",
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Check size={24} />
+                  Submit Recording
+                </motion.button>
+                <motion.button
+                  onClick={handleRetake}
+                  className="flex items-center gap-2 px-6 py-4 bg-gray-600 hover:bg-gray-700 text-white rounded-full font-semibold"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <RotateCcw size={20} />
+                  Retake
+                </motion.button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center justify-center gap-4">
-        {!isRecording && countdown === null && !isProcessing && (
-          <>
-            <motion.button
-              onClick={startCountdown}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors"
-              style={{
-                background:
-                  "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
-                color: "#111827",
-                boxShadow:
-                  "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-              }}
-              whileHover={{
-                scale: 1.05,
-                boxShadow:
-                  "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Video size={20} />
-              Start High-Quality Recording
-            </motion.button>
-            <button
-              onClick={onCancel}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition-colors"
-            >
-              Cancel
-            </button>
-          </>
-        )}
-
-        {isRecording && (
-          <motion.button
-            onClick={stopRecording}
-            className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <StopCircle size={20} />
-            Stop Recording
-          </motion.button>
-        )}
-      </div>
-
-      <p className="mt-3 text-center text-sm text-white">
-        {!isRecording &&
-          countdown === null &&
-          !isProcessing &&
-          "Click 'Start High-Quality Recording' to begin after a 3-second countdown. Keep steady movements and ensure bright, even lighting to minimize pixelation."}
-        {isRecording &&
-          "Recording in high quality... Move smoothly to avoid pixelation"}
-        {isProcessing &&
-          "Please wait while we process and enhance your recording..."}
-      </p>
+        </div>
+      )}
     </div>
   );
 }

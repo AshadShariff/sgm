@@ -1,17 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Check, Upload, FileText, CreditCard, Loader2, X, User, Video } from "lucide-react"
-import VideoRecorder from "./video-recorder"
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Check,
+  Upload,
+  FileText,
+  CreditCard,
+  Loader2,
+  X,
+  User,
+  Video,
+} from "lucide-react";
+import VideoRecorder from "./video-recorder";
 
-const RECORDING_SCRIPT = `Hello! I'm feeling confident and relaxed right now. The lighting is good, and my pronunciation is clear. This process is enjoyable. I'll smile and include natural and general hand movements.
+const RECORDING_SCRIPT = `You’re free to talk about anything you like, or you can follow this short sample script.
 
-My face is clearly visible. I'm speaking in a steady pace with a natural tone. I'm taking pauses between sentences. This recording is fun and I'm in a great mood. I'll continue doing my best until the end.`
+Hi! I’m feeling good today. The lighting is nice and I’m speaking clearly. I’m relaxed and smiling while recording. I’ll talk naturally and move my hands a bit as I speak.`;
 
-const PACKAGES = [
-  { id: "ai-clone", name: "Get Your AI Clone", amount: 37 },
-]
+const PACKAGES = [{ id: "ai-clone", name: "Get Your AI Clone", amount: 37 }];
 
 async function uploadToCloudinaryChunked(
   file: File,
@@ -908,7 +916,7 @@ export default function ProcessFlowSection() {
                               size={40}
                             />
                             <h3 className="text-xl font-bold text-white mb-2">
-                              STEP 1 — Purchase Your AI Clone
+                              STEP 1 – Purchase Your AI Clone
                             </h3>
                           </div>
                           <div className="space-y-4">
@@ -986,29 +994,14 @@ export default function ProcessFlowSection() {
                                 size={40}
                               />
                               <h3 className="text-xl font-bold text-white mb-2">
-                                STEP 2 — Upload Video
+                                STEP 2 – Upload Video
                               </h3>
                               <p className="text-white text-sm">
-                                Payment confirmed — please record yourself
+                                Payment confirmed – please record yourself
                                 following the script below and upload your video
                               </p>
                             </div>
                             <div className="space-y-4">
-                              <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-4">
-                                <label className="block text-sm font-semibold text-white mb-2">
-                                  Please record yourself following this script:
-                                </label>
-                                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#92400E]">
-                                  <p className="text-white whitespace-pre-line leading-relaxed text-sm">
-                                    {RECORDING_SCRIPT}
-                                  </p>
-                                </div>
-                                <p className="mt-2 text-xs text-white">
-                                  Record in a quiet room. Keep camera at eye
-                                  level. Speak clearly and naturally.
-                                </p>
-                              </div>
-
                               {!recordingMode && !videoPreview && (
                                 <div className="text-center">
                                   <motion.button
@@ -1035,6 +1028,7 @@ export default function ProcessFlowSection() {
                                 <VideoRecorder
                                   onRecordingComplete={handleRecordingComplete}
                                   onCancel={() => setRecordingMode(false)}
+                                  script={RECORDING_SCRIPT}
                                 />
                               ) : (
                                 <div>
@@ -1108,8 +1102,8 @@ export default function ProcessFlowSection() {
                                     )}
                                   </div>
                                 </div>
-                              )}
-
+                            )}
+                            
                               {uploadedFiles.length > 0 && (
                                 <div className="p-3 bg-green-900/50 border border-green-600 rounded-lg">
                                   <p className="text-green-200 font-semibold text-sm mb-1">
@@ -1120,6 +1114,22 @@ export default function ProcessFlowSection() {
                                   </p>
                                 </div>
                               )}
+
+                              <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-4">
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                  Please record yourself following this script:
+                                </label>
+                                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#92400E]">
+                                  <p className="text-white whitespace-pre-line leading-relaxed text-sm">
+                                    {RECORDING_SCRIPT}
+                                  </p>
+                                </div>
+                                <p className="mt-2 text-xs text-white">
+                                  Record in a quiet room. Keep camera at eye
+                                  level. Speak clearly and naturally.
+                                </p>
+                              </div>
+
 
                               {files.length > 0 &&
                                 uploadedFiles.length === 0 && (
@@ -1282,7 +1292,8 @@ export default function ProcessFlowSection() {
                                 />
                                 <p className="mt-1 text-xs text-white">
                                   This description will be used to generate your
-                                  AI avatar's speech. Be clear and specific.
+                                  AI avatar&apos;s speech. Be clear and
+                                  specific.
                                 </p>
                               </div>
                               <motion.button
@@ -1463,7 +1474,7 @@ export default function ProcessFlowSection() {
                       size={48}
                     />
                     <h3 className="text-2xl font-bold text-white mb-4">
-                      STEP 1 — Purchase Your AI Clone
+                      STEP 1 – Purchase Your AI Clone
                     </h3>
                   </div>
 
@@ -1528,7 +1539,7 @@ export default function ProcessFlowSection() {
                 </motion.div>
               )}
 
-              {/* Step 2: Record & Upload Video + Write Script */}
+              {/* Step 2: Record & Upload Video */}
               {(currentStep === 2 ||
                 (paymentStatus === "paid" && !completedSteps.includes(2))) && (
                 <motion.div
@@ -1541,31 +1552,15 @@ export default function ProcessFlowSection() {
                   <div className="text-center mb-8">
                     <Upload className="mx-auto mb-4 text-[#C89356]" size={48} />
                     <h3 className="text-2xl font-bold text-white mb-4">
-                      STEP 2 — Upload Video
+                      STEP 2 – Upload Video
                     </h3>
                     <p className="text-white">
-                      Payment confirmed — please record yourself following the
+                      Payment confirmed – please record yourself following the
                       script below and upload your video
                     </p>
                   </div>
 
                   <div className="space-y-6">
-                    {/* Script Display */}
-                    <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-6">
-                      <label className="block text-sm font-semibold text-white mb-3">
-                        Please record yourself following this script:
-                      </label>
-                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#92400E]">
-                        <p className="text-white whitespace-pre-line leading-relaxed text-base">
-                          {RECORDING_SCRIPT}
-                        </p>
-                      </div>
-                      <p className="mt-3 text-sm text-white">
-                        Record in a quiet room. Keep camera at eye level. Speak
-                        clearly and naturally.
-                      </p>
-                    </div>
-
                     {/* Record Button - Show only when not recording and no video preview */}
                     {!recordingMode && !videoPreview && (
                       <div className="text-center">
@@ -1598,6 +1593,7 @@ export default function ProcessFlowSection() {
                       <VideoRecorder
                         onRecordingComplete={handleRecordingComplete}
                         onCancel={() => setRecordingMode(false)}
+                        script={RECORDING_SCRIPT}
                       />
                     ) : (
                       <div>
@@ -1738,6 +1734,21 @@ export default function ProcessFlowSection() {
                         )}
                       </motion.button>
                     )}
+
+                    <div className="bg-[#2a2a2a] border border-[#C89356] rounded-lg p-6">
+                      <label className="block text-sm font-semibold text-white mb-3">
+                        Please record yourself following this script:
+                      </label>
+                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#92400E]">
+                        <p className="text-white whitespace-pre-line leading-relaxed text-base">
+                          {RECORDING_SCRIPT}
+                        </p>
+                      </div>
+                      <p className="mt-3 text-sm text-white">
+                        Record in a quiet room. Keep camera at eye level. Speak
+                        clearly and naturally.
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -1755,7 +1766,7 @@ export default function ProcessFlowSection() {
                   <div className="text-center mb-8">
                     <User className="mx-auto mb-4 text-[#C89356]" size={48} />
                     <h3 className="text-2xl font-bold text-white mb-4">
-                      STEP 3 — Contact Information
+                      STEP 3 – Contact Information
                     </h3>
                     <p className="text-white">
                       Please provide your contact information and script
@@ -1821,7 +1832,7 @@ export default function ProcessFlowSection() {
                       />
                       <p className="mt-2 text-sm text-white">
                         This description will be used to generate your AI
-                        avatar's speech. Be clear and specific.
+                        avatar&apos;s speech. Be clear and specific.
                       </p>
                     </div>
 
@@ -1841,7 +1852,6 @@ export default function ProcessFlowSection() {
                           return;
                         }
 
-                        // Validate email format
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                         if (!emailRegex.test(email)) {
                           setError("Please enter a valid email address");
@@ -1852,16 +1862,14 @@ export default function ProcessFlowSection() {
                         setError(null);
 
                         try {
-                          let currentSubmissionId = submissionId;
+                          const currentSubmissionId = submissionId;
 
-                          // Ensure we have a submissionId
                           if (!currentSubmissionId) {
                             throw new Error(
                               "Submission not found. Please go back and upload your video first."
                             );
                           }
 
-                          // Save custom prompt first
                           const promptResponse = await fetch(
                             `/api/v1/submissions/${currentSubmissionId}/custom-prompt`,
                             {
@@ -1879,7 +1887,6 @@ export default function ProcessFlowSection() {
                             );
                           }
 
-                          // Update order with contact information
                           if (orderId) {
                             const response = await fetch(
                               `/api/v1/orders/${orderId}`,
@@ -1994,7 +2001,6 @@ export default function ProcessFlowSection() {
               padding: "1rem",
             }}
             onClick={(e) => {
-              // Prevent closing on backdrop click to maintain flow
               e.stopPropagation();
             }}
           >
