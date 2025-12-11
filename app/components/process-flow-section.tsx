@@ -37,7 +37,6 @@ const SESSION_EXPIRY_DAYS = 90; // 90 days session validity
 const saveSession = (data: SessionData) => {
   try {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
-    console.log("Session saved:", data);
   } catch (error) {
     console.error("Failed to save session:", error);
   }
@@ -53,12 +52,10 @@ const loadSession = (): SessionData | null => {
     // Check if session is expired (90 days)
     const expiryTime = session.timestamp + (SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
     if (Date.now() > expiryTime) {
-      console.log("Session expired, clearing...");
       clearSession();
       return null;
     }
 
-    console.log("Session loaded:", session);
     return session;
   } catch (error) {
     console.error("Failed to load session:", error);
@@ -69,7 +66,6 @@ const loadSession = (): SessionData | null => {
 const clearSession = () => {
   try {
     localStorage.removeItem(SESSION_STORAGE_KEY);
-    console.log("Session cleared");
   } catch (error) {
     console.error("Failed to clear session:", error);
   }
@@ -195,7 +191,6 @@ export default function ProcessFlowSection() {
       });
 
       const data = await response.json();
-      console.log(`🚀 ~ autoRestoreSession ~ data:`, data);
 
       if (data.success && data.session.paymentStatus === "paid") {
         // Restore core state
@@ -255,7 +250,6 @@ export default function ProcessFlowSection() {
         }, 300);
       } else {
         // Invalid: Clear silently (no error to user)
-        console.log("Invalid session, cleared.");
         clearSession();
       }
     } catch (err) {
@@ -421,7 +415,6 @@ export default function ProcessFlowSection() {
       } else {
         const errorMessage = data.error || "Failed to create checkout session";
         setError(errorMessage);
-        console.error("Checkout error:", errorMessage);
       }
     } catch (err: any) {
       setError(err.message || "Failed to start checkout");
@@ -833,6 +826,7 @@ export default function ProcessFlowSection() {
     setHasAutoRestored(false);
     setFiles([]);
     setUploadedFiles([]);
+    clearSession();
     if (videoPreview) {
       URL.revokeObjectURL(videoPreview);
       setVideoPreview(null);
