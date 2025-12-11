@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find associated submission if exists
-    const submission = await Submission.findOne({ orderId: order._id });
+      const submission = await Submission.findOne({ orderId: order._id }).sort({ createdAt: -1 });
 
     // Return session data
     return NextResponse.json({

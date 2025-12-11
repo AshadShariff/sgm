@@ -571,29 +571,29 @@ export default function VideoRecorder({
               !isProcessing &&
               cameraReady && (
                 <>
-                  <motion.button
+                    <motion.button
                     onClick={startCountdown}
-                    className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg shadow-2xl"
+                    className="flex items-center gap-2 px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-base md:text-lg shadow-2xl"
                     style={{
                       background:
-                        "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
+                      "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
                       color: "#111827",
                     }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                  >
-                    <Video size={24} />
+                    >
+                    <Video size={20} className="md:w-6 md:h-6" />
                     Start Recording
-                  </motion.button>
-                  <motion.button
+                    </motion.button>
+                    <motion.button
                     onClick={onCancel}
-                    className="flex items-center gap-2 px-6 py-4 bg-gray-600/90 hover:bg-gray-700 text-white rounded-full font-semibold backdrop-blur-sm"
+                    className="flex items-center gap-2 px-5 py-3 md:px-6 md:py-4 bg-gray-600/90 hover:bg-gray-700 text-white rounded-full font-semibold backdrop-blur-sm text-sm md:text-base"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                  >
-                    <ArrowLeft size={20} />
+                    >
+                    <ArrowLeft size={18} className="md:w-5 md:h-5" />
                     Back
-                  </motion.button>
+                    </motion.button>
                 </>
               )}
           </div>
@@ -677,44 +677,44 @@ export default function VideoRecorder({
                 <motion.button
                   onClick={handleSubmitRecording}
                   disabled={uploading || uploadSuccess}
-                  className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg shadow-2xl disabled:opacity-50"
+                  className="flex items-center gap-2 px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-base md:text-lg shadow-2xl disabled:opacity-50"
                   style={{
-                    background:
-                      uploading || uploadSuccess
-                        ? "#6B7280"
-                        : "linear-gradient(90deg,#10B981 0%, #059669 50%, #047857 100%)",
-                    color: "white",
+                  background:
+                    uploading || uploadSuccess
+                    ? "#6B7280"
+                    : "linear-gradient(90deg,#10B981 0%, #059669 50%, #047857 100%)",
+                  color: uploading || uploadSuccess ? "white" : "#111827",
                   }}
                   whileHover={
-                    !uploading && !uploadSuccess ? { scale: 1.05 } : {}
+                  !uploading && !uploadSuccess ? { scale: 1.05 } : {}
                   }
                   whileTap={!uploading && !uploadSuccess ? { scale: 0.95 } : {}}
                 >
                   {uploading ? (
-                    <Loader2 className="animate-spin" size={24} />
+                  <Loader2 className="animate-spin" size={20} />
                   ) : uploadSuccess ? (
-                    <Check size={24} />
+                  <Check size={20} />
                   ) : (
-                    <>
-                      {uploadAndProceed ? (
-                        <Upload size={24} />
-                      ) : (
-                        <Check size={24} />
-                      )}
-                      {uploadAndProceed
-                        ? "Upload & Proceed"
-                        : "Submit Recording"}
-                    </>
+                  <>
+                    {uploadAndProceed ? (
+                    <Upload size={20} />
+                    ) : (
+                    <Check size={20} />
+                    )}
+                    {uploadAndProceed
+                    ? "Upload & Proceed"
+                    : "Submit Recording"}
+                  </>
                   )}
                 </motion.button>
                 <motion.button
                   onClick={handleRetake}
                   disabled={uploading}
-                  className="flex items-center gap-2 px-6 py-4 bg-gray-600 hover:bg-gray-700 text-white rounded-full font-semibold disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-3 md:px-6 md:py-4 bg-gray-600/90 hover:bg-gray-700 text-white rounded-full font-semibold backdrop-blur-sm text-sm md:text-base disabled:opacity-50"
                   whileHover={!uploading ? { scale: 1.05 } : {}}
                   whileTap={!uploading ? { scale: 0.95 } : {}}
                 >
-                  <RotateCcw size={20} />
+                  <RotateCcw size={18} />
                   Retake
                 </motion.button>
               </div>
