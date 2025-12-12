@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import VideoRecorder from "./video-recorder";
 
-const RECORDING_SCRIPT = `Feel free to speak on any topic you prefer, or follow the sample script provided on the next screen.`;
+// const RECORDING_SCRIPT = `Feel free to speak on any topic you prefer, or follow the sample script provided on the next screen.`;
+const RECORDING_SCRIPT = `Hello, I am excited to record this video. I'm speaking with confidence and ease. The lighting looks great and my voice is clear. I'm keeping a warm smile with natural hand movements. My face stays well visible as I speak steadily. I'm taking gentle pauses between sentences.`;
 
 // Hi! I’m feeling good today. The lighting is nice and I’m speaking clearly. I’m relaxed and smiling while recording. I’ll talk naturally and move my hands a bit as I speak.`;
 
@@ -547,8 +548,8 @@ export default function ProcessFlowSection() {
         );
         return false;
       }
-      if (file.size > 2 * 1024 * 1024 * 1024) {
-        alert(`File too large: ${file.name}. Maximum size is 2GB.`);
+      if (file.size > 80 * 1024 * 1024) {
+        alert(`File too large: ${file.name}. Maximum size is 80MB.`);
         return false;
       }
       return true;
@@ -1407,7 +1408,7 @@ export default function ProcessFlowSection() {
                                           Drag & drop or click to select
                                         </span>
                                         <span className="text-xs text-white/70">
-                                          Max 2GB per file (.mp4, .mov, or
+                                          Max 80MB per file (.mp4, .mov, or
                                           .webm)
                                         </span>
                                       </label>
@@ -1941,7 +1942,7 @@ export default function ProcessFlowSection() {
                                   Drag & drop or click to select
                                 </span>
                                 <span className="text-sm text-white">
-                                  Max 2GB per file (.mp4, .mov, or .webm)
+                                  Max 80MB per file (.mp4, .mov, or .webm)
                                 </span>
                               </label>
                             </div>
