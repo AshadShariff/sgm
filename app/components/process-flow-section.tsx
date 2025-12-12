@@ -42,7 +42,7 @@ const saveSession = (data: SessionData) => {
   }
 };
 
-const loadSession = (): SessionData | null => {
+export const loadSession = (): SessionData | null => {
   try {
     const data = localStorage.getItem(SESSION_STORAGE_KEY);
     if (!data) return null;
