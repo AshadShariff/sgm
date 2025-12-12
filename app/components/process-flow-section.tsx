@@ -1350,7 +1350,9 @@ export default function ProcessFlowSection() {
                               </p>
                             </div>
 
-                            <p className="text-white text-xs mb-2 text-center">OR</p>
+                            <p className="text-white text-xs mb-2 text-center">
+                              OR
+                            </p>
                             {/* Show either VideoRecorder or Upload Zone */}
                             {recordingMode ? (
                               <VideoRecorder
@@ -1359,6 +1361,7 @@ export default function ProcessFlowSection() {
                                 uploadAndProceed={uploadAndProceed}
                                 onProceed={handleProceed}
                                 script={RECORDING_SCRIPT}
+                                shouldRequestFullscreen
                               />
                             ) : (
                               <div>
