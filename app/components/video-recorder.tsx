@@ -22,6 +22,7 @@ interface VideoRecorderProps {
   uploadAndProceed?: (file: File) => Promise<string>;
   onProceed?: (submissionId: string) => void;
   script?: string;
+  shouldRequestFullscreen?: boolean; // Add this prop
 }
 
 const RECORDING_DURATION = 30; // 30 seconds fixed duration
@@ -32,6 +33,7 @@ export default function VideoRecorder({
   uploadAndProceed,
   onProceed,
   script = "",
+  shouldRequestFullscreen = false, // Add this with default false
 }: VideoRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -52,6 +54,7 @@ export default function VideoRecorder({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const playbackVideoRef = useRef<HTMLVideoElement>(null);
@@ -62,6 +65,7 @@ export default function VideoRecorder({
   const startTimeRef = useRef<number>(0);
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const recordedBlobRef = useRef<Blob | null>(null);
+  const modalContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const lineIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -117,6 +121,61 @@ export default function VideoRecorder({
       setCurrentLineIndex((prev) => (prev + 1) % teleprompterLines.length);
     }, getLineDuration());
   };
+
+  // Fullscreen helper functions
+  const requestFullscreen = async () => {
+    if (!modalContainerRef.current) return;
+
+    try {
+      const elem = modalContainerRef.current as any;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+        setIsFullscreen(true);
+      } else if (elem.webkitRequestFullscreen) {
+        // Safari support
+        await elem.webkitRequestFullscreen();
+        setIsFullscreen(true);
+      }
+    } catch (err) {
+      console.warn("Fullscreen request failed:", err);
+      // Continue without fullscreen
+    }
+  };
+
+  const exitFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      } else if ((document as any).webkitFullscreenElement) {
+        (document as any).webkitExitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.warn("Exit fullscreen failed:", err);
+    }
+  };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(
+        !!document.fullscreenElement ||
+          !!(document as any).webkitFullscreenElement
+      );
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
+    };
+  }, []);
 
   useEffect(() => {
     if (!isRecording) {
@@ -186,6 +245,17 @@ export default function VideoRecorder({
     };
   }, []);
 
+  // Add this new useEffect to handle fullscreen on mount for mobile
+  useEffect(() => {
+    if (shouldRequestFullscreen && isMobile && modalContainerRef.current) {
+      const timer = setTimeout(() => {
+        requestFullscreen();
+      }, 100); // Small delay to ensure DOM is ready
+
+      return () => clearTimeout(timer);
+    }
+  }, [shouldRequestFullscreen, isMobile]);
+
   const cleanup = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -203,6 +273,10 @@ export default function VideoRecorder({
     }
     if (recordedVideoUrl) {
       URL.revokeObjectURL(recordedVideoUrl);
+    }
+    // Exit fullscreen on cleanup
+    if (isFullscreen) {
+      exitFullscreen();
     }
   };
 
@@ -264,6 +338,11 @@ export default function VideoRecorder({
   };
 
   const startCountdown = () => {
+    // Request fullscreen on mobile when starting countdown
+    if (isMobile) {
+      requestFullscreen();
+    }
+
     setCountdown(3);
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
@@ -529,6 +608,13 @@ export default function VideoRecorder({
     }
   };
 
+  const handleCancel = () => {
+    if (isFullscreen) {
+      exitFullscreen();
+    }
+    onCancel();
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -559,7 +645,7 @@ export default function VideoRecorder({
           onClick={(e) => {
             // Only close if clicking directly on backdrop, not on children
             if (e.target === e.currentTarget) {
-              onCancel();
+              handleCancel();
             }
           }}
           style={{ minHeight: "100vh", minWidth: "100vw" }}
@@ -568,6 +654,7 @@ export default function VideoRecorder({
 
       {/* Modal Container */}
       <div
+        ref={modalContainerRef}
         className={`fixed z-[9999] bg-black ${
           isMobile
             ? "inset-0"
@@ -675,7 +762,7 @@ export default function VideoRecorder({
             {isRecording && (
               <div className="absolute top-10 left-0 right-0 p-4 z-20">
                 <div className="max-w-2xl mx-auto text-center">
-                  <div className="bg-white/20 backdrop-blur-md rounded-lg p-4">
+                  <div className="bg-white/5 backdrop-blur-md rounded-lg p-4">
                     <p className="text-white text-lg font-semibold mb-2">
                       Recording in Progress
                     </p>
@@ -741,7 +828,7 @@ export default function VideoRecorder({
             )}
 
             {/* Control Buttons */}
-            <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 z-30 px-4">
+            <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 z-30 px-4 pb-safe">
               {!isRecording &&
                 countdown === null &&
                 !isProcessing &&
@@ -762,7 +849,7 @@ export default function VideoRecorder({
                       Start Recording
                     </motion.button>
                     <motion.button
-                      onClick={onCancel}
+                      onClick={handleCancel}
                       className="flex items-center gap-2 px-5 py-3 md:px-6 md:py-4 bg-gray-600/90 hover:bg-gray-700 text-white rounded-full font-semibold backdrop-blur-sm text-sm md:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -846,7 +933,7 @@ export default function VideoRecorder({
             )}
 
             {/* Playback Controls Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-6 z-30">
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-6 z-30 pb-safe">
               <div className="max-w-2xl mx-auto">
                 <p className="text-white text-center font-semibold text-lg mb-4">
                   Review Your Recording

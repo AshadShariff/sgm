@@ -15,7 +15,7 @@ import {
   Pause,
 } from "lucide-react";
 import Footer from "./footer";
-import ProcessFlowSection from "./process-flow-section";
+import ProcessFlowSection, { loadSession } from "./process-flow-section";
 
 function PurchaseModal({
   isOpen,
@@ -235,6 +235,12 @@ export default function AiClonePage() {
           section.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }, 100);
+
+      const existingSession = loadSession();
+      if (
+        existingSession &&
+        existingSession.paymentStatus === "paid"
+      ) return;
 
       const response = await fetch("/api/v1/checkout/create-session", {
         method: "POST",
