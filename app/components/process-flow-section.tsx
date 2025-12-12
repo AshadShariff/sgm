@@ -161,6 +161,15 @@ export default function ProcessFlowSection() {
 
   // NEW: Flag to prevent multiple auto-restores
   const [hasAutoRestored, setHasAutoRestored] = useState(false);
+  const [showStep1Modal, setShowStep1Modal] = useState(false);
+  const [showStep2Modal, setShowStep2Modal] = useState(false);
+
+  // Add this new useEffect to control modal visibility based on completedSteps
+  useEffect(() => {
+    const steps = completedSteps;
+    setShowStep1Modal(steps.includes(1) && !steps.includes(2));
+    setShowStep2Modal(steps.includes(2) && !steps.includes(3));
+  }, [completedSteps]);
 
   // NEW: Auto-restore session on mount (behind the scenes)
   useEffect(() => {
@@ -179,11 +188,91 @@ export default function ProcessFlowSection() {
   }, []); // Empty deps: Runs once on mount
 
   // NEW: Auto-restore function (validates API, restores state, sets correct step—no UI blocks)
+  // const autoRestoreSession = async (session: SessionData) => {
+  //   if (hasAutoRestored) return;
+  //   setLoading(true); // Brief loading during restore (shows spinner if visible)
+  //   try {
+  //     // Validate with API (POST /api/v1/orders/session)
+  //     const response = await fetch("/api/v1/orders/session", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ orderId: session.orderId }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (data.success && data.session.paymentStatus === "paid") {
+  //       // Restore core state
+  //       setOrderId(data.session.orderId);
+  //       setSubmissionId(data.session.submissionId);
+  //       setPaymentStatus(data.session.paymentStatus);
+  //       setCompletedSteps(session.completedSteps); // Trust local for steps
+
+  //       // Fetch fresh buyerInfo and form data
+  //       if (data.session.buyer) {
+  //         setBuyerInfo(data.session.buyer);
+  //         setName(data.session.buyer.name || "");
+  //         setEmail(data.session.buyer.email || "");
+  //         setPhone(data.session.buyer.phone || "");
+  //       }
+
+  //       // Fetch customPrompt if relevant (e.g., Step 3)
+  //       if (session.completedSteps.includes(2) && data.session.customPrompt) {
+  //         setCustomPrompt(data.session.customPrompt);
+  //       }
+
+  //       // Auto-set currentStep based on completedSteps
+  //       let targetStep = 1;
+  //       if (session.completedSteps.includes(3)) {
+  //         targetStep = 3;
+  //       } else if (
+  //         session.completedSteps.includes(2) ||
+  //         data.session.hasVideos
+  //       ) {
+  //         // Assume hasVideos from API if available
+  //         targetStep = 3;
+  //         if (!session.completedSteps.includes(2)) {
+  //           const newSteps = [...session.completedSteps, 2];
+  //           setCompletedSteps(newSteps);
+  //           updateSession({ completedSteps: newSteps });
+  //         }
+  //       } else if (session.completedSteps.includes(1)) {
+  //         targetStep = 2;
+  //       }
+  //       setCurrentStep(targetStep);
+
+  //       // Save refreshed optimized session (no buyerInfo/customPrompt)
+  //       saveSession({
+  //         orderId: data.session.orderId,
+  //         submissionId: data.session.submissionId,
+  //         paymentStatus: data.session.paymentStatus,
+  //         completedSteps: session.completedSteps,
+  //         timestamp: Date.now(),
+  //       });
+
+  //       // Scroll to section
+  //       setTimeout(() => {
+  //         sectionRef.current?.scrollIntoView({
+  //           behavior: "smooth",
+  //           block: "start",
+  //         });
+  //       }, 300);
+  //     } else {
+  //       // Invalid: Clear silently (no error to user)
+  //       clearSession();
+  //     }
+  //   } catch (err) {
+  //     console.error("Auto-restore error:", err);
+  //     clearSession();
+  //   } finally {
+  //     setLoading(false);
+  //     setHasAutoRestored(true);
+  //   }
+  // };
   const autoRestoreSession = async (session: SessionData) => {
     if (hasAutoRestored) return;
-    setLoading(true); // Brief loading during restore (shows spinner if visible)
+    setLoading(true);
     try {
-      // Validate with API (POST /api/v1/orders/session)
       const response = await fetch("/api/v1/orders/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -193,11 +282,19 @@ export default function ProcessFlowSection() {
       const data = await response.json();
 
       if (data.success && data.session.paymentStatus === "paid") {
+        let currentSteps = [...session.completedSteps];
+
+        // Auto-add step 2 if videos exist but not marked (for consistency with localStorage)
+        if (data.session.hasVideos && !currentSteps.includes(2)) {
+          currentSteps = [...currentSteps, 2];
+          updateSession({ completedSteps: currentSteps });
+        }
+
         // Restore core state
         setOrderId(data.session.orderId);
         setSubmissionId(data.session.submissionId);
         setPaymentStatus(data.session.paymentStatus);
-        setCompletedSteps(session.completedSteps); // Trust local for steps
+        setCompletedSteps(currentSteps);
 
         // Fetch fresh buyerInfo and form data
         if (data.session.buyer) {
@@ -208,36 +305,21 @@ export default function ProcessFlowSection() {
         }
 
         // Fetch customPrompt if relevant (e.g., Step 3)
-        if (session.completedSteps.includes(2) && data.session.customPrompt) {
+        if (currentSteps.includes(2) && data.session.customPrompt) {
           setCustomPrompt(data.session.customPrompt);
         }
 
-        // Auto-set currentStep based on completedSteps
-        let targetStep = 1;
-        if (session.completedSteps.includes(3)) {
-          targetStep = 3;
-        } else if (
-          session.completedSteps.includes(2) ||
-          data.session.hasVideos
-        ) {
-          // Assume hasVideos from API if available
-          targetStep = 3;
-          if (!session.completedSteps.includes(2)) {
-            const newSteps = [...session.completedSteps, 2];
-            setCompletedSteps(newSteps);
-            updateSession({ completedSteps: newSteps });
-          }
-        } else if (session.completedSteps.includes(1)) {
-          targetStep = 2;
-        }
+        // Auto-set currentStep to the max completed step (triggers modals via useEffect)
+        const maxCompleted = Math.max(...currentSteps, 0);
+        const targetStep = maxCompleted === 0 ? 1 : maxCompleted;
         setCurrentStep(targetStep);
 
-        // Save refreshed optimized session (no buyerInfo/customPrompt)
+        // Save refreshed optimized session
         saveSession({
           orderId: data.session.orderId,
           submissionId: data.session.submissionId,
           paymentStatus: data.session.paymentStatus,
-          completedSteps: session.completedSteps,
+          completedSteps: currentSteps,
           timestamp: Date.now(),
         });
 
@@ -249,7 +331,6 @@ export default function ProcessFlowSection() {
           });
         }, 300);
       } else {
-        // Invalid: Clear silently (no error to user)
         clearSession();
       }
     } catch (err) {
@@ -301,27 +382,27 @@ export default function ProcessFlowSection() {
   }, [currentStep, paymentStatus]);
 
   // Auto-advance to step 3 when step 2 is completed
-  useEffect(() => {
-    if (
-      completedSteps.includes(2) &&
-      (uploadedFiles.length > 0 || submissionId) &&
-      currentStep !== 3 &&
-      !completedSteps.includes(3)
-    ) {
-      setCurrentStep(3);
-      setTimeout(() => {
-        const step3Element = document.querySelector('[data-step="3"]');
-        if (step3Element) {
-          step3Element.scrollIntoView({ behavior: "smooth", block: "start" });
-        } else {
-          sectionRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-      }, 600);
-    }
-  }, [completedSteps, uploadedFiles.length, submissionId, currentStep]);
+  // useEffect(() => {
+  //   if (
+  //     completedSteps.includes(2) &&
+  //     (uploadedFiles.length > 0 || submissionId) &&
+  //     currentStep !== 3 &&
+  //     !completedSteps.includes(3)
+  //   ) {
+  //     setCurrentStep(3);
+  //     setTimeout(() => {
+  //       const step3Element = document.querySelector('[data-step="3"]');
+  //       if (step3Element) {
+  //         step3Element.scrollIntoView({ behavior: "smooth", block: "start" });
+  //       } else {
+  //         sectionRef.current?.scrollIntoView({
+  //           behavior: "smooth",
+  //           block: "start",
+  //         });
+  //       }
+  //     }, 600);
+  //   }
+  // }, [completedSteps, uploadedFiles.length, submissionId, currentStep]);
 
   // Auto-scroll when step 3 is completed
   useEffect(() => {
@@ -351,17 +432,8 @@ export default function ProcessFlowSection() {
         }
 
         if (data.paymentStatus === "paid") {
-          // setCompletedSteps([1]);
-          // setCurrentStep(2);
-          // setTimeout(() => {
-          //   sectionRef.current?.scrollIntoView({
-          //     behavior: "smooth",
-          //     block: "start",
-          //   });
-          // }, 300);
           const newCompletedSteps = [1];
           setCompletedSteps(newCompletedSteps);
-          setCurrentStep(2);
 
           // NEW: Save optimized session
           saveSession({
@@ -2274,7 +2346,158 @@ export default function ProcessFlowSection() {
         </div>
       </section>
 
-      {/* Completion Popup Modal - Rendered outside section to avoid overflow issues */}
+      <AnimatePresence>
+        {showStep1Modal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              margin: 0,
+              padding: "1rem",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1a1a] border-2 border-[#C89356] rounded-xl p-6 md:p-8 max-w-md w-full mx-4 text-center shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <Check size={32} className="text-green-500" />
+              </motion.div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
+                ✓ Payment Completed!
+              </h3>
+
+              <div className="space-y-3 mb-6">
+                <p className="text-white text-xs md:text-base">
+                  Your payment has been successfully processed! You can now
+                  proceed to create your AI clone!
+                </p>
+                <p className="text-white text-xs md:text-base">
+                  Don’t worry, you can return to this section anytime to upload
+                  your video at your convenience.
+                </p>
+              </div>
+
+              <motion.button
+                onClick={() => {
+                  setShowStep1Modal(false);
+                  setCurrentStep(2);
+                  setTimeout(() => {
+                    sectionRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }, 300);
+                }}
+                className="w-full py-3 bg-[#3ab44c] hover:bg-[#44874e] hover:delay-150 text-white rounded-lg font-semibold transition-colors text-sm md:text-base"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Proceed to Step 2
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Step 2 Completion Modal */}
+      <AnimatePresence>
+        {showStep2Modal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              margin: 0,
+              padding: "1rem",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1a1a] border-2 border-[#C89356] rounded-xl p-6 md:p-8 max-w-md w-full mx-4 text-center shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <Check size={32} className="text-green-500" />
+              </motion.div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
+                ✓ Video Upload Complete!
+              </h3>
+
+              <div className="space-y-3 mb-6">
+                <p className="text-white text-sm md:text-base">
+                  Your video has been uploaded - you’re all set!
+                </p>
+                <p className="text-white text-xs md:text-sm">
+                  You can come back later to fill in the details, or proceed to
+                  Step 3 and continue right now.
+                </p>
+              </div>
+
+              <motion.button
+                onClick={() => {
+                  setShowStep2Modal(false);
+                  setCurrentStep(3);
+                  setTimeout(() => {
+                    const step3Element =
+                      document.querySelector('[data-step="3"]');
+                    if (step3Element) {
+                      step3Element.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    } else {
+                      sectionRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }
+                  }, 300);
+                }}
+                className="w-full py-3 bg-[#3ab44c] hover:bg-[#44874e] hover:delay-150 text-white rounded-lg font-semibold transition-colors text-sm md:text-base"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Proceed to Step 3
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {completedSteps.includes(3) && (
           <motion.div
