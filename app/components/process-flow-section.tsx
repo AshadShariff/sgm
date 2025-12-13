@@ -1274,128 +1274,32 @@ export default function ProcessFlowSection() {
             {[1, 2, 3].map((step) => {
               const isCompleted = completedSteps.includes(step);
               const isCurrent = currentStep === step;
-              const isClickable =
-                step === 1 ||
-                (step === 2 &&
-                  completedSteps.includes(1) &&
-                  paymentStatus === "paid") ||
-                (step === 3 &&
-                  completedSteps.includes(1) &&
-                  completedSteps.includes(2) &&
-                  paymentStatus === "paid" &&
-                  (uploadedFiles.length > 0 || submissionId));
 
               return (
                 <React.Fragment key={step}>
                   <div className="flex items-center justify-center flex-shrink-0">
                     <div className="flex flex-col items-center relative">
                       <motion.div
-                        className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all whitespace-nowrap ${
-                          isClickable
-                            ? "hover:scale-110"
-                            : "cursor-not-allowed opacity-60"
+                        className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-default transition-all whitespace-nowrap ${
+                          isCompleted || isCurrent ? "" : "opacity-60"
                         }`}
                         style={{
                           background:
                             "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
                           color: "#111827",
-                          boxShadow: isClickable
-                            ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
-                            : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
+                          boxShadow:
+                            isCompleted || isCurrent
+                              ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
+                              : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
                         }}
-                        onClick={() => {
-                          if (completedSteps.includes(3)) {
-                            setError(
-                              "Process completed! Please refresh to start a new order."
-                            );
-                            return;
-                          }
-                          if (!isClickable) {
-                            if (step === 2) {
-                              setError(
-                                "Please complete Step 1 (Purchase) first before proceeding to Step 2."
-                              );
-                            } else if (step === 3) {
-                              if (
-                                !completedSteps.includes(1) ||
-                                paymentStatus !== "paid"
-                              ) {
-                                setError(
-                                  "Please complete Step 1 and Step 2 first before proceeding to Step 3."
-                                );
-                              } else if (
-                                !completedSteps.includes(2) ||
-                                (uploadedFiles.length === 0 && !submissionId)
-                              ) {
-                                setError(
-                                  "Please complete Step 2 (Upload) first before proceeding to Step 3."
-                                );
-                              }
-                            }
-                            setTimeout(() => {
-                              sectionRef.current?.scrollIntoView({
-                                behavior: "smooth",
-                                block: "start",
-                              });
-                            }, 100);
-                            return;
-                          }
-                          if (step === 1) {
-                            setCurrentStep(1);
-                            setError(null);
-                          } else if (step === 2) {
-                            if (
-                              completedSteps.includes(1) &&
-                              paymentStatus === "paid"
-                            ) {
-                              setCurrentStep(2);
-                              setError(null);
-                            } else {
-                              setError(
-                                "Please complete Step 1 (Purchase) first before proceeding to Step 2."
-                              );
-                            }
-                          } else if (step === 3) {
-                            if (
-                              !completedSteps.includes(1) ||
-                              paymentStatus !== "paid"
-                            ) {
-                              setError(
-                                "Please complete Step 1 and Step 2 first before proceeding to Step 3."
-                              );
-                            } else if (
-                              !completedSteps.includes(2) ||
-                              (uploadedFiles.length === 0 && !submissionId)
-                            ) {
-                              setError(
-                                "Please complete Step 2 (Upload) first before proceeding to Step 3."
-                              );
-                            } else {
-                              setCurrentStep(3);
-                              setError(null);
-                            }
-                          }
-                          setTimeout(() => {
-                            sectionRef.current?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            });
-                          }, 100);
-                        }}
-                        whileHover={
-                          isClickable
-                            ? {
-                                scale: 1.1,
-                                boxShadow:
-                                  "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                              }
-                            : {}
-                        }
-                        whileTap={isClickable ? { scale: 0.95 } : {}}
                       >
-                        {step}
+                        {isCompleted ? (
+                          <Check size={32} className="text-green-600" />
+                        ) : (
+                          step
+                        )}
                       </motion.div>
-                      {isCurrent && (
+                      {isCurrent && !completedSteps.includes(3) && (
                         <motion.div
                           className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center text-3xl"
                           initial={{ opacity: 0, y: -10 }}
@@ -1443,8 +1347,7 @@ export default function ProcessFlowSection() {
                       <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
                       <div
                         className={`h-0.5 flex-1 transition-colors ${
-                          completedSteps.includes(step + 1) ||
-                          currentStep > step
+                          completedSteps.includes(step)
                             ? "bg-green-500"
                             : "bg-white"
                         }`}
@@ -1474,134 +1377,29 @@ export default function ProcessFlowSection() {
                 (step === 2 && paymentStatus === "paid") ||
                 (step === 3 && completedSteps.includes(2));
 
-              // Step is clickable only if all previous steps are completed
-              const isClickable =
-                step === 1 ||
-                (step === 2 &&
-                  completedSteps.includes(1) &&
-                  paymentStatus === "paid") ||
-                (step === 3 &&
-                  completedSteps.includes(1) &&
-                  completedSteps.includes(2) &&
-                  paymentStatus === "paid" &&
-                  (uploadedFiles.length > 0 || submissionId));
-
               return (
                 <div key={step} className="space-y-4">
                   {/* Step Circle */}
                   <div className="flex flex-col items-center">
                     <motion.div
-                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-pointer transition-all ${
-                        isClickable
-                          ? "hover:scale-110"
-                          : "cursor-not-allowed opacity-60"
+                      className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl cursor-default transition-all ${
+                        isCompleted || isCurrent ? "" : "opacity-60"
                       }`}
                       style={{
                         background:
                           "linear-gradient(90deg,#F6C066 0%, #F0A43A 50%, #E38826 100%)",
                         color: "#111827",
-                        boxShadow: isClickable
-                          ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
-                          : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
+                        boxShadow:
+                          isCompleted || isCurrent
+                            ? "0 0 15px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)"
+                            : "0 0 10px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1), 0 10px 20px rgba(227,129,38,0.1), inset 0 3px 9px rgba(255,255,255,0.05)",
                       }}
-                      onClick={() => {
-                        // Prevent navigation if step 3 is completed
-                        if (completedSteps.includes(3)) {
-                          setError(
-                            "Process completed! Please refresh to start a new order."
-                          );
-                          return;
-                        }
-
-                        if (!isClickable) {
-                          // Show error message based on which step is missing
-                          if (step === 2) {
-                            setError(
-                              "Please complete Step 1 (Purchase) first before proceeding to Step 2."
-                            );
-                          } else if (step === 3) {
-                            if (
-                              !completedSteps.includes(1) ||
-                              paymentStatus !== "paid"
-                            ) {
-                              setError(
-                                "Please complete Step 1 and Step 2 first before proceeding to Step 3."
-                              );
-                            } else if (
-                              !completedSteps.includes(2) ||
-                              (uploadedFiles.length === 0 && !submissionId)
-                            ) {
-                              setError(
-                                "Please complete Step 2 (Upload) first before proceeding to Step 3."
-                              );
-                            }
-                          }
-                          setTimeout(() => {
-                            sectionRef.current?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            });
-                          }, 100);
-                          return;
-                        }
-
-                        // Only allow navigation if previous steps are completed
-                        if (step === 1) {
-                          setCurrentStep(1);
-                          setError(null);
-                        } else if (step === 2) {
-                          // Only allow if step 1 is completed
-                          if (
-                            completedSteps.includes(1) &&
-                            paymentStatus === "paid"
-                          ) {
-                            setCurrentStep(2);
-                            setError(null);
-                          } else {
-                            setError(
-                              "Please complete Step 1 (Purchase) first before proceeding to Step 2."
-                            );
-                          }
-                        } else if (step === 3) {
-                          // Only allow if steps 1 and 2 are completed
-                          if (
-                            !completedSteps.includes(1) ||
-                            paymentStatus !== "paid"
-                          ) {
-                            setError(
-                              "Please complete Step 1 and Step 2 first before proceeding to Step 3."
-                            );
-                          } else if (
-                            !completedSteps.includes(2) ||
-                            (uploadedFiles.length === 0 && !submissionId)
-                          ) {
-                            setError(
-                              "Please complete Step 2 (Upload) first before proceeding to Step 3."
-                            );
-                          } else {
-                            setCurrentStep(3);
-                            setError(null);
-                          }
-                        }
-                        setTimeout(() => {
-                          sectionRef.current?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "start",
-                          });
-                        }, 100);
-                      }}
-                      whileHover={
-                        isClickable
-                          ? {
-                              scale: 1.1,
-                              boxShadow:
-                                "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.3), 0 18px 36px rgba(227,129,38,0.18), inset 0 6px 18px rgba(255,255,255,0.08)",
-                            }
-                          : {}
-                      }
-                      whileTap={isClickable ? { scale: 0.95 } : {}}
                     >
-                      {step}
+                      {isCompleted ? (
+                        <Check size={32} className="text-green-600" />
+                      ) : (
+                        step
+                      )}
                     </motion.div>
                     <div className="mt-2 text-base font-medium text-white text-center">
                       {step === 1 && "STEP 1"}
@@ -1625,7 +1423,7 @@ export default function ProcessFlowSection() {
                   {step < 3 && (
                     <div
                       className={`w-0.5 h-8 mx-auto transition-colors ${
-                        completedSteps.includes(step + 1) || currentStep > step
+                        completedSteps.includes(step)
                           ? "bg-green-500"
                           : "bg-white/30"
                       }`}
@@ -2890,4 +2688,3 @@ export default function ProcessFlowSection() {
     </>
   );
 }
-
