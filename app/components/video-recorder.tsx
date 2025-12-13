@@ -836,7 +836,7 @@ export default function VideoRecorder({
             )}
 
             {/* Control Buttons */}
-            <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 z-30 px-4 pb-safe">
+            <div className="absolute bottom-12 left-0 right-0 flex items-center justify-center gap-4 z-30 px-4 pb-safe">
               {!isRecording &&
                 countdown === null &&
                 !isProcessing &&
